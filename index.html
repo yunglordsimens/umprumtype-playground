@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Typo Umprum v2.0 – Advanced Interactive Playground">
-    <title>Play v2.0 – Typo Umprum</title>
+    <meta name="description" content="Typo Umprum v3.0 – Studio Hub Interactive Playground">
+    <title>Studio Hub v3.0 – Typo Umprum</title>
     
-    <!-- Google Analytics -->
+    <!-- Google Analytics v4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -14,6 +14,9 @@
         gtag('js', new Date());
         gtag('config', 'G-XXXXXXXXXX');
     </script>
+    
+    <!-- jsPDF for v3.0 PDF exports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
@@ -31,12 +34,16 @@
             font-size: 14px;
             overflow: hidden;
             touch-action: none;
-            transition: overflow 0.3s ease, background-color 0.5s ease;
+            transition: all 0.5s ease;
         }
 
         body.dark-mode {
             background-color: #000000;
             color: #ffffff;
+        }
+
+        body.frozen-mode #canvas-container {
+            cursor: default !important;
         }
 
         a { text-decoration: none; color: inherit; cursor: pointer; }
@@ -48,9 +55,9 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 50px;
+            height: 60px;
             background: #fff;
-            border-bottom: 1px solid #000;
+            border-bottom: 2px solid #000;
             z-index: 1000;
             display: flex;
             align-items: center;
@@ -60,8 +67,7 @@
 
         body.dark-mode .headerMenuWrapper {
             background: #000;
-            border-bottom: 1px solid #fff;
-            color: #fff;
+            border-bottom: 2px solid #fff;
         }
 
         .headerMenu {
@@ -74,28 +80,41 @@
             font-weight: bold;
         }
 
-        .homeItem { margin-right: auto; }
+        .homeItem { margin-right: auto; font-size: 14px; font-weight: 900; }
         .menuItem a.active { text-decoration: underline; }
-
-        @media (max-width: 600px) {
-            .headerMenuWrapper { padding: 0 10px; height: 40px; }
-            .headerMenu { gap: 15px; font-size: 10px; }
-            .desktop-only { display: none; }
+        .version-badge {
+            background: #000;
+            color: #fff;
+            padding: 2px 8px;
+            font-size: 10px;
+            margin-left: 5px;
+            border-radius: 0;
+        }
+        body.dark-mode .version-badge {
+            background: #fff;
+            color: #000;
         }
 
-        /* --- TOOLS PANEL --- */
+        @media (max-width: 600px) {
+            .headerMenuWrapper { padding: 0 10px; height: 50px; }
+            .headerMenu { gap: 15px; font-size: 10px; }
+            .desktop-only { display: none; }
+            .version-badge { display: none; }
+        }
+
+        /* --- TOOLS PANEL v3.0 --- */
         #tools-panel {
             position: fixed;
-            top: 50px;
+            top: 60px;
             left: 0;
             bottom: 0;
-            width: 280px;
+            width: 320px;
             background: #fff;
-            border-right: 1px solid #000;
+            border-right: 2px solid #000;
             display: flex;
             flex-direction: column;
             padding: 20px;
-            gap: 20px;
+            gap: 25px;
             z-index: 900;
             overflow-y: auto;
             transition: all 0.5s ease;
@@ -103,34 +122,32 @@
 
         body.dark-mode #tools-panel {
             background: #000;
-            border-right: 1px solid #fff;
-            color: #fff;
+            border-right: 2px solid #fff;
         }
 
         @media (max-width: 800px) {
             #tools-panel {
                 width: 100%;
                 height: auto;
-                max-height: 85vh;
-                bottom: auto;
-                top: 40px;
+                max-height: 80vh;
+                top: 50px;
                 border-right: none;
-                border-bottom: 1px solid #000;
+                border-bottom: 2px solid #000;
                 padding: 15px;
-                gap: 15px;
+                gap: 20px;
                 display: none;
             }
             body.dark-mode #tools-panel {
-                border-bottom: 1px solid #fff;
+                border-bottom: 2px solid #fff;
             }
         }
 
-        /* CONTROL GROUPS */
+        /* CONTROL GROUPS v3.0 */
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            padding-bottom: 15px;
+            gap: 12px;
+            padding-bottom: 20px;
             border-bottom: 1px solid #eee;
         }
 
@@ -140,6 +157,21 @@
 
         .control-group:last-child {
             border-bottom: none;
+        }
+
+        .control-group-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #666;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        body.dark-mode .control-group-title {
+            color: #aaa;
         }
 
         label {
@@ -154,12 +186,12 @@
             color: #aaa;
         }
 
-        /* INPUTS */
-        select, input[type="text"], textarea {
+        /* INPUTS v3.0 */
+        select, input[type="text"], textarea, input[type="number"] {
             appearance: none;
             -webkit-appearance: none;
             width: 100%;
-            padding: 8px 10px;
+            padding: 10px 12px;
             border: 1px solid #000;
             border-radius: 0;
             background: #fff;
@@ -168,12 +200,12 @@
             color: #000;
             outline: none;
             transition: all 0.3s ease;
-            resize: vertical;
         }
 
         body.dark-mode select,
         body.dark-mode input[type="text"],
-        body.dark-mode textarea {
+        body.dark-mode textarea,
+        body.dark-mode input[type="number"] {
             border: 1px solid #fff;
             background: #000;
             color: #fff;
@@ -181,6 +213,7 @@
 
         select:focus, input:focus, textarea:focus { 
             background: #f0f0f0; 
+            border-width: 2px;
         }
         
         body.dark-mode select:focus,
@@ -194,16 +227,16 @@
             content: "▼";
             font-size: 8px;
             position: absolute;
-            right: 10px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             pointer-events: none;
         }
 
-        /* BUTTONS */
+        /* BUTTONS v3.0 */
         button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: #fff;
             color: #000;
             border: 1px solid #000;
@@ -212,7 +245,9 @@
             font-weight: bold;
             cursor: pointer;
             border-radius: 0;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         body.dark-mode button {
@@ -224,32 +259,45 @@
         button:hover { 
             background: #000; 
             color: #fff;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         body.dark-mode button:hover { 
             background: #fff; 
             color: #000;
+            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.featured {
+            border-width: 2px;
+            font-weight: 900;
+            letter-spacing: 1px;
         }
 
         .button-group {
             display: flex;
             gap: 10px;
-            margin-top: 5px;
+            margin-top: 8px;
         }
 
         .button-group button {
             flex: 1;
         }
 
-        /* SLIDERS */
+        /* SLIDERS v3.0 */
         input[type="range"] {
             appearance: none;
             -webkit-appearance: none;
             width: 100%;
-            height: 2px;
+            height: 3px;
             background: #ddd;
             outline: none;
-            margin: 10px 0;
+            margin: 12px 0;
+            border-radius: 0;
         }
 
         body.dark-mode input[type="range"] {
@@ -258,53 +306,66 @@
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             background: #000;
             cursor: pointer;
             border-radius: 0;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            border: 1px solid #000;
         }
 
         body.dark-mode input[type="range"]::-webkit-slider-thumb {
             background: #fff;
+            border: 1px solid #fff;
         }
 
         input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
+            transform: scale(1.3);
         }
 
         .slider-value {
             font-size: 10px;
             text-align: center;
             color: #666;
-            margin-top: -5px;
+            margin-top: -8px;
+            font-weight: bold;
         }
 
         body.dark-mode .slider-value {
             color: #aaa;
         }
 
-        /* CHECKBOXES */
+        /* CHECKBOXES & TOGGLES v3.0 */
         .checkbox-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             cursor: pointer;
             font-size: 12px;
             user-select: none;
+            padding: 4px 0;
+        }
+
+        .checkbox-row:hover {
+            background: rgba(0,0,0,0.02);
+        }
+
+        body.dark-mode .checkbox-row:hover {
+            background: rgba(255,255,255,0.05);
         }
 
         input[type="checkbox"] {
             appearance: none;
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             border: 1px solid #000;
             border-radius: 0;
             display: grid;
             place-content: center;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
         }
 
         body.dark-mode input[type="checkbox"] {
@@ -313,24 +374,138 @@
 
         input[type="checkbox"]::before {
             content: "";
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             transform: scale(0);
             background-color: #000;
-            transition: transform 0.2s;
+            transition: transform 0.3s ease;
         }
 
         body.dark-mode input[type="checkbox"]::before {
             background-color: #fff;
         }
 
-        input[type="checkbox"]:checked::before { transform: scale(1); }
+        input[type="checkbox"]:checked::before { 
+            transform: scale(1); 
+        }
 
-        /* --- CANVAS --- */
+        input[type="checkbox"]:checked {
+            border-width: 2px;
+        }
+
+        /* MODE SELECTORS v3.0 */
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .mode-btn {
+            padding: 10px 5px;
+            font-size: 10px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        body.dark-mode .mode-btn {
+            border: 1px solid #fff;
+            background: #000;
+            color: #fff;
+        }
+
+        .mode-btn.active {
+            background: #000;
+            color: #fff;
+            font-weight: bold;
+            border-width: 2px;
+        }
+
+        body.dark-mode .mode-btn.active {
+            background: #fff;
+            color: #000;
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        body.dark-mode .mode-btn:hover:not(.active) {
+            background: #222;
+        }
+
+        /* QUALITY SELECTOR v2.4 */
+        .quality-selector {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .quality-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 10px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .quality-btn {
+            border: 1px solid #fff;
+            background: #000;
+            color: #fff;
+        }
+
+        .quality-btn.active {
+            background: #000;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        body.dark-mode .quality-btn.active {
+            background: #fff;
+            color: #000;
+        }
+
+        /* GALLERY v2.3 */
+        .gallery-item {
+            padding: 10px;
+            border: 1px solid #000;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+        }
+
+        body.dark-mode .gallery-item {
+            border: 1px solid #fff;
+        }
+
+        .gallery-item:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        body.dark-mode .gallery-item:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .gallery-meta {
+            font-size: 9px;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        /* --- CANVAS v3.0 --- */
         #canvas-container {
             position: fixed;
-            top: 50px;
-            left: 280px;
+            top: 60px;
+            left: 320px;
             right: 0;
             bottom: 0;
             overflow: hidden;
@@ -338,16 +513,21 @@
             transition: left 0.3s ease;
         }
 
-        @media (max-width: 800px) {
-            #canvas-container { left: 0; top: 40px; }
+        body.frozen-mode #canvas-container {
+            cursor: default;
         }
 
-        /* LOADING SCREEN */
+        @media (max-width: 800px) {
+            #canvas-container { left: 0; top: 50px; }
+        }
+
+        /* LOADING SCREEN v3.0 */
         #loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #fff;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 2000;
@@ -362,58 +542,191 @@
             color: #fff;
         }
 
-        /* TOAST NOTIFICATIONS */
+        #loader::after {
+            content: "";
+            width: 40px;
+            height: 40px;
+            margin-top: 20px;
+            border: 2px solid #000;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        body.dark-mode #loader::after {
+            border: 2px solid #fff;
+            border-top: 2px solid transparent;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* TOAST NOTIFICATIONS v3.0 */
         #toast-container {
             position: fixed;
-            top: 60px;
+            top: 70px;
             right: 20px;
             z-index: 1100;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-width: 300px;
+            max-width: 350px;
         }
 
         .toast {
             background: #000;
             color: #fff;
-            padding: 12px 20px;
+            padding: 15px 20px;
             border-radius: 0;
             font-size: 12px;
             animation: slideIn 0.3s ease;
-            border-left: 3px solid #fff;
+            border-left: 4px solid #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            max-width: 100%;
+            word-break: break-word;
         }
 
         body.dark-mode .toast {
             background: #fff;
             color: #000;
-            border-left: 3px solid #000;
+            border-left: 4px solid #000;
         }
+
+        .toast.warning { border-left-color: #ff9800; }
+        .toast.success { border-left-color: #4caf50; }
+        .toast.error { border-left-color: #f44336; }
+        .toast.info { border-left-color: #2196f3; }
 
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* MOBILE TOGGLE */
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
+        /* MODALS v3.0 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            border: 3px solid #000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        body.dark-mode .modal-content {
+            background: #000;
+            border: 3px solid #fff;
+            color: #fff;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* SHARE MODAL v3.0 */
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .share-options button {
+            margin: 0;
+        }
+
+        /* GALLERY MODAL v3.0 */
+        #gallery-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        body.dark-mode #gallery-list {
+            border: 1px solid #fff;
+        }
+
+        /* FEEDBACK MODAL v3.0 */
+        .rating {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .rating-star {
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #ddd;
+        }
+
+        body.dark-mode .rating-star {
+            color: #444;
+        }
+
+        .rating-star.active,
+        .rating-star:hover {
+            color: #ffd700;
+            transform: scale(1.2);
+        }
+
+        /* MOBILE TOGGLE v3.0 */
         #mobile-toggle-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 25px;
+            right: 25px;
             background: #000;
             color: #fff;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1100;
-            font-size: 24px;
+            font-size: 28px;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
         body.dark-mode #mobile-toggle-btn {
@@ -422,54 +735,173 @@
         }
 
         #mobile-toggle-btn:hover {
-            transform: scale(1.1);
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
 
         @media (max-width: 800px) {
             #mobile-toggle-btn { display: flex; }
         }
 
-        /* PERFORMANCE INDICATOR */
+        /* PERFORMANCE INDICATOR v3.0 */
         #performance-indicator {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
+            bottom: 25px;
+            left: 25px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 8px 15px;
+            font-size: 11px;
+            z-index: 100;
+            display: none;
+            border: 1px solid #000;
+            font-family: monospace;
+        }
+
+        body.dark-mode #performance-indicator {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            border: 1px solid #fff;
+        }
+
+        #performance-indicator.low {
+            background: rgba(244, 67, 54, 0.9);
+            color: #fff;
+        }
+
+        /* KEYBOARD SHORTCUTS HINT */
+        #shortcuts-hint {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
             color: #fff;
             padding: 5px 10px;
             font-size: 10px;
             z-index: 100;
             display: none;
+            border: 1px solid #000;
         }
 
-        body.dark-mode #performance-indicator {
-            background: rgba(255, 255, 255, 0.2);
+        body.dark-mode #shortcuts-hint {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            border: 1px solid #fff;
         }
 
-        /* FONT FACES (Dynamic via JS in Phase 4) */
+        /* FONT FACES (Dynamic via JS) */
     </style>
 </head>
 <body>
 
-    <div id="loader">Loading Typo Umprum v2.0</div>
+    <div id="loader">Loading Studio Hub v3.0</div>
     <div id="toast-container"></div>
     <div id="performance-indicator">FPS: 60</div>
-
-    <div class="headerMenuWrapper">
-        <div class="headerMenu">
-            <div class="homeItem"><a href="index.html">UMPRUM TYPE v2.0</a></div>
-            <div class="menuItem"><a href="typefaces.php">Typefaces</a></div>
-            <div class="menuItem desktop-only"><a href="#" onclick="showComingSoon()">Projects</a></div>
-            <div class="menuItem desktop-only"><a href="#" onclick="showComingSoon()">Journal</a></div>
-            <div class="menuItem desktop-only"><a href="#" onclick="showComingSoon()">Store</a></div>
-            <div class="menuItem"><a href="play.html" class="active">Playground</a></div>
-            <div class="menuItem"><a href="info.html">Info</a></div>
+    <div id="shortcuts-hint">Press ? for shortcuts</div>
+    
+    <!-- MODALS -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Share Your Creation</div>
+            <p>Share your typography creation with the world:</p>
+            <input type="text" id="share-url" readonly style="width: 100%; margin: 15px 0; padding: 10px;">
+            <div class="share-options">
+                <button id="copy-url-btn">Copy URL</button>
+                <button id="tweet-btn">Tweet</button>
+                <button id="export-pdf-btn">Export PDF</button>
+                <button id="export-svg-btn">Export SVG</button>
+                <button id="save-gallery-btn">Save to Gallery</button>
+                <button id="close-share-btn">Close</button>
+            </div>
+            <p style="font-size: 11px; margin-top: 15px; opacity: 0.7;">
+                Tip: The URL contains all your settings. Share it to recreate this exact setup.
+            </p>
         </div>
     </div>
 
+    <div id="gallery-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Your Gallery</div>
+            <p>Saved creations (stored locally in your browser):</p>
+            <div id="gallery-list"></div>
+            <div class="button-group" style="margin-top: 20px;">
+                <button id="load-gallery-btn">Load Selected</button>
+                <button id="delete-gallery-btn">Delete Selected</button>
+                <button id="close-gallery-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Feedback & Suggestions</div>
+            <p>Help us improve Typo Umprum Studio Hub:</p>
+            
+            <div class="rating">
+                <span class="rating-star" data-value="1">★</span>
+                <span class="rating-star" data-value="2">★</span>
+                <span class="rating-star" data-value="3">★</span>
+                <span class="rating-star" data-value="4">★</span>
+                <span class="rating-star" data-value="5">★</span>
+            </div>
+            <input type="hidden" id="feedback-rating" value="0">
+            
+            <textarea id="feedback-text" rows="5" placeholder="What do you think? Suggestions for new effects? Bugs to report?" style="width: 100%; margin: 15px 0;"></textarea>
+            
+            <div class="control-group" style="border: none; padding: 0;">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="feedback-allow-contact">
+                    <span>Allow us to contact you about your feedback</span>
+                </label>
+                <input type="email" id="feedback-email" placeholder="Your email (optional)" style="margin-top: 10px;">
+            </div>
+            
+            <div class="button-group" style="margin-top: 20px;">
+                <button id="submit-feedback-btn">Submit Feedback</button>
+                <button id="close-feedback-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER v3.0 -->
+    <div class="headerMenuWrapper">
+        <div class="headerMenu">
+            <div class="homeItem">
+                <a href="index.html">UMPRUM STUDIO HUB <span class="version-badge">v3.0</span></a>
+            </div>
+            <div class="menuItem"><a href="typefaces.php">Typefaces</a></div>
+            <div class="menuItem desktop-only"><a href="#" onclick="showComingSoon()">Exhibitions</a></div>
+            <div class="menuItem desktop-only"><a href="#" onclick="showComingSoon()">Research</a></div>
+            <div class="menuItem"><a href="#" id="open-gallery-btn">Gallery</a></div>
+            <div class="menuItem"><a href="play.html" class="active">Studio</a></div>
+            <div class="menuItem"><a href="#" id="open-feedback-btn">Feedback</a></div>
+            <div class="menuItem desktop-only"><button id="toggle-quality-btn" style="border:none;background:none;font-size:12px;">⚡</button></div>
+        </div>
+    </div>
+
+    <!-- TOOLS PANEL v3.0 -->
     <div id="tools-panel">
-        <!-- FONT SECTION -->
+        <!-- QUICK ACTIONS -->
         <div class="control-group">
+            <div class="control-group-title">
+                <span>Quick Actions</span>
+                <button id="featured-btn" class="featured" style="width: auto; padding: 8px 15px;">⭐ Featured Font</button>
+            </div>
+            <div class="button-group">
+                <button id="randomize-btn">Randomize</button>
+                <button id="preset-minimal">Minimal</button>
+                <button id="preset-chaotic">Chaotic</button>
+                <button id="preset-organic">Organic</button>
+            </div>
+        </div>
+
+        <!-- FONT SELECTION v3.0 -->
+        <div class="control-group">
+            <div class="control-group-title">
+                <span>Typography</span>
+                <a href="#" id="view-font-site" style="font-size:9px; opacity:0.7;">View on Site →</a>
+            </div>
             <label for="fontSelect">Typeface</label>
             <div class="select-wrapper">
                 <select id="fontSelect" aria-label="Select font typeface"></select>
@@ -478,76 +910,120 @@
             <div class="select-wrapper">
                 <select id="styleSelect" aria-label="Select font style"></select>
             </div>
-        </div>
-
-        <!-- TEXT SECTION -->
-        <div class="control-group">
-            <label for="customInput">Custom Text</label>
-            <input type="text" id="customInput" placeholder="TYPE SOMETHING..." aria-label="Enter custom text">
             <div class="button-group">
-                <button id="applyTextBtn">Update</button>
-                <button id="resetTextBtn">Reset Text</button>
+                <button id="mix-fonts-btn">Mix Fonts</button>
+                <button id="variable-sliders-btn">Variable</button>
             </div>
         </div>
 
-        <!-- DENSITY & SPACING -->
+        <!-- TEXT CONTENT v3.0 -->
         <div class="control-group">
-            <label for="densitySlider">Density</label>
-            <input type="range" id="densitySlider" min="300" max="2500" value="1200" step="100" aria-label="Glyph density">
-            <div class="slider-value" id="densityValue">1200 glyphs</div>
+            <div class="control-group-title">
+                <span>Content</span>
+                <span id="char-count" style="font-size:9px; opacity:0.7;">0 chars</span>
+            </div>
+            <textarea id="customInput" placeholder="Enter your text here... (minimum 5 characters)" rows="3" aria-label="Enter custom text"></textarea>
+            <div class="button-group">
+                <button id="applyTextBtn">Update Text</button>
+                <button id="resetTextBtn">Reset</button>
+                <button id="sample-text-btn">Sample</button>
+            </div>
         </div>
 
-        <!-- INTERACTION CONTROLS -->
+        <!-- GRID & DENSITY v3.0 -->
         <div class="control-group">
-            <label for="radiusSlider">Interaction Radius</label>
-            <input type="range" id="radiusSlider" min="100" max="600" value="280" step="10" aria-label="Interaction radius">
+            <div class="control-group-title">
+                <span>Grid & Layout</span>
+                <span id="glyph-count" style="font-size:9px; opacity:0.7;">0 glyphs</span>
+            </div>
+            <label for="densitySlider">Density</label>
+            <input type="range" id="densitySlider" min="100" max="3000" value="1200" step="100" aria-label="Glyph density">
+            <div class="slider-value" id="densityValue">1200 glyphs</div>
+            
+            <label for="spacingSlider">Spacing</label>
+            <input type="range" id="spacingSlider" min="0.5" max="2.0" value="1.0" step="0.1" aria-label="Glyph spacing">
+            <div class="slider-value" id="spacingValue">Normal</div>
+            
+            <label for="alignSlider">Alignment</label>
+            <input type="range" id="alignSlider" min="0" max="2" value="1" step="1" aria-label="Text alignment">
+            <div class="slider-value" id="alignValue">Center</div>
+        </div>
+
+        <!-- INTERACTION v3.0 -->
+        <div class="control-group">
+            <div class="control-group-title">
+                <span>Interaction</span>
+                <span class="mode-selector" style="grid-template-columns: repeat(4, 1fr); width: auto; gap: 5px;">
+                    <button class="mode-btn" data-mode="ink">Ink</button>
+                    <button class="mode-btn" data-mode="ripple">Ripple</button>
+                    <button class="mode-btn" data-mode="gravity">Gravity</button>
+                    <button class="mode-btn active" data-mode="none">None</button>
+                </span>
+            </div>
+            <label for="radiusSlider">Radius</label>
+            <input type="range" id="radiusSlider" min="50" max="800" value="280" step="10" aria-label="Interaction radius">
             <div class="slider-value" id="radiusValue">280px</div>
             
-            <label for="maxScaleSlider">Max Scale</label>
-            <input type="range" id="maxScaleSlider" min="1.5" max="5" value="3.5" step="0.5" aria-label="Maximum scale">
-            <div class="slider-value" id="maxScaleValue">3.5x</div>
+            <label for="scaleSlider">Max Scale</label>
+            <input type="range" id="scaleSlider" min="1.0" max="8.0" value="3.5" step="0.1" aria-label="Maximum scale">
+            <div class="slider-value" id="scaleValue">3.5x</div>
+            
+            <label for="strengthSlider">Effect Strength</label>
+            <input type="range" id="strengthSlider" min="0" max="2.0" value="1.0" step="0.1" aria-label="Effect strength">
+            <div class="slider-value" id="strengthValue">Normal</div>
         </div>
 
-        <!-- EFFECTS SECTION (Phase 2) -->
+        <!-- EFFECTS v3.0 (v2.1 + v2.2) -->
         <div class="control-group">
-            <label>Effects</label>
-            <label class="checkbox-row" for="rippleToggle">
-                <input type="checkbox" id="rippleToggle">
-                <span>Ripple Effect</span>
-            </label>
+            <div class="control-group-title">
+                <span>Effects & Modes</span>
+                <div class="quality-selector" style="width: auto;">
+                    <button class="quality-btn active" data-quality="high">High</button>
+                    <button class="quality-btn" data-quality="medium">Mid</button>
+                    <button class="quality-btn" data-quality="low">Low</button>
+                </div>
+            </div>
             
-            <label for="idleSlider">Idle Movement</label>
-            <input type="range" id="idleSlider" min="0" max="0.5" value="0.25" step="0.05" aria-label="Idle strength">
+            <div class="mode-selector">
+                <label class="checkbox-row" for="inverseToggle">
+                    <input type="checkbox" id="inverseToggle" checked>
+                    <span>Liquid Ink</span>
+                </label>
+                <label class="checkbox-row" for="glitchToggle">
+                    <input type="checkbox" id="glitchToggle">
+                    <span>Glitch</span>
+                </label>
+                <label class="checkbox-row" for="freezeToggle">
+                    <input type="checkbox" id="freezeToggle">
+                    <span>Freeze</span>
+                </label>
+                <label class="checkbox-row" for="darkToggle">
+                    <input type="checkbox" id="darkToggle">
+                    <span>Dark Mode</span>
+                </label>
+            </div>
+            
+            <label for="idleSlider">Idle Motion</label>
+            <input type="range" id="idleSlider" min="0" max="1.0" value="0.25" step="0.05" aria-label="Idle strength">
             <div class="slider-value" id="idleValue">Mild</div>
         </div>
 
-        <!-- MODE TOGGLES (Phase 1) -->
-        <div class="control-group">
-            <label class="checkbox-row" for="inverseToggle">
-                <input type="checkbox" id="inverseToggle" checked aria-label="Toggle liquid ink mode">
-                <span>Liquid Ink Mode</span>
-            </label>
-            
-            <label class="checkbox-row" for="darkToggle">
-                <input type="checkbox" id="darkToggle" aria-label="Toggle dark mode">
-                <span>Dark Mode</span>
-            </label>
-        </div>
-
-        <!-- ACTIONS -->
-        <div class="control-group">
+        <!-- ACTIONS v3.0 -->
+        <div class="control-group" style="border: none; margin-top: auto;">
+            <div class="control-group-title">
+                <span>Export & Share</span>
+                <button id="shortcuts-btn" style="width: auto; padding: 5px 10px; font-size: 10px;">?</button>
+            </div>
             <div class="button-group">
                 <button id="resetBtn">Reset All</button>
                 <button id="saveBtn">Export PNG</button>
-                <button id="shareBtn">Share on X</button>
+                <button id="shareBtn">Share</button>
             </div>
-        </div>
-
-        <!-- FEEDBACK SECTION (Phase 5) -->
-        <div class="control-group">
-            <label>Feedback</label>
-            <textarea id="feedbackInput" rows="3" placeholder="What do you think? Suggestions?" aria-label="Feedback textarea"></textarea>
-            <button id="sendFeedback">Send Feedback</button>
+            <div class="button-group" style="margin-top: 10px;">
+                <button id="save-preset-btn">Save Preset</button>
+                <button id="load-preset-btn">Load Preset</button>
+                <button id="print-btn">Print Setup</button>
+            </div>
         </div>
     </div>
 
@@ -556,111 +1032,212 @@
     <div id="canvas-container"></div>
 
     <script>
-        // ==================== TYPO UMPRUM v2.0 ====================
+        // ==================== TYPO UMPRUM STUDIO HUB v3.0 ====================
         
-        // --- GLOBAL VARIABLES ---
+        // --- GLOBAL VARIABLES & CONFIGURATION ---
         let p5Instance;
         let fontLoaded = false;
         let grid = [];
-        let lowFPSWarningShown = false;
+        let velocityGrid = [];
         let frameTimes = [];
         let lastFrameTime = performance.now();
+        let lowFPSWarningShown = false;
+        let lastMousePos = { x: 0, y: 0 };
+        let frozenState = null;
+        let gallery = [];
+        let userPresets = [];
+        let keyboardShortcuts = {};
         
-        // FONT DATA WITH CORRECTED AUTHORS (Phase 1)
-        let availableFonts = {
-            'Ananas': {
-                sampleText: "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest...",
-                styles: ['Regular', 'Italic'],
-                cssFamilies: ['AnanasRegular', 'AnanasItalic'],
-                author: 'Jaromír Květoň',
-                year: 2025
-            },
-            'Chlebiczech': {
-                sampleText: "Jeho jméno jsem zapomněl, prý provádí nárazové obchody s neřestmi...",
-                styles: ['Regular'],
-                cssFamilies: ['ChlebiczechRegular'],
-                author: 'Žofia Kosová',
-                year: 2025
-            },
-            'Korchma': {
-                sampleText: "Вона імітує запальний погляд, тріумфально оживаючи у темряві...",
-                styles: ['Regular', 'Italic'],
-                cssFamilies: ['KorchmaRegular', 'KorchmaItalic'],
-                author: 'Anna Sherlupenkova',
-                year: 2025
-            },
-            'März Grotesk': {
-                sampleText: "During the Thirty Years' War, the Swedes wanted to use it as a weapon...",
-                styles: ['Bold'],
-                cssFamilies: ['MarzGroteskBold'],
-                author: 'Šimon Vlasák',
-                year: 2025
-            }
-        };
-
-        // CONFIG (v2.0)
+        // v3.0 CONFIGURATION
         let config = {
             // Core
+            version: '3.0',
             baseFontSize: 24,
             currentFontFamily: 'AnanasRegular',
-            activeText: availableFonts['Ananas'].sampleText,
+            activeText: '',
             
-            // Grid
+            // Font mixing (v3.0 feature)
+            mixedFonts: false,
+            fontMix: [],
+            
+            // Grid & Layout
             targetGlyphCount: 1200,
             mobileMaxGlyphs: 800,
+            spacingFactor: 1.0,
+            alignment: 1, // 0=left, 1=center, 2=right
             
             // Interaction
             interactionRadius: 280,
             maxScale: 3.5,
+            interactionMode: 'none', // 'ink', 'ripple', 'gravity', 'magnet', 'none'
+            effectStrength: 1.0,
             
-            // Effects (Phase 1 & 2)
+            // Effects (v2.1 + v2.2)
             inverseMode: true,
             darkMode: false,
-            rippleEffect: false,
+            freezeMode: false,
+            glitchEffect: false,
+            gravityEffect: false,
             idleStrength: 0.25,
             rippleDamping: 0.95,
+            gravityStrength: 0.02,
+            glitchAmount: 0.1,
             
-            // State
+            // Quality (v2.4)
+            qualityMode: 'high', // 'high', 'medium', 'low'
+            
+            // UI State
             lastFontName: 'Ananas',
-            lastStyleIndex: 0
+            lastStyleIndex: 0,
+            lastTx: 0,
+            lastTy: 0
+        };
+
+        // FONT DATA WITH V3.0 EXTENSIONS
+        let availableFonts = {};
+        let variableFontAxes = {}; // For future variable fonts
+
+        // PRESETS (v3.0 expanded)
+        const presets = {
+            minimal: {
+                targetGlyphCount: 600,
+                spacingFactor: 1.5,
+                interactionMode: 'none',
+                idleStrength: 0,
+                maxScale: 2.0,
+                effectStrength: 0.5
+            },
+            chaotic: {
+                targetGlyphCount: 2500,
+                spacingFactor: 0.7,
+                interactionMode: 'gravity',
+                glitchEffect: true,
+                idleStrength: 0.5,
+                maxScale: 6.0,
+                effectStrength: 1.5
+            },
+            organic: {
+                targetGlyphCount: 1800,
+                spacingFactor: 1.2,
+                interactionMode: 'ink',
+                idleStrength: 0.3,
+                maxScale: 4.0,
+                interactionRadius: 400,
+                effectStrength: 1.2
+            },
+            print: {
+                targetGlyphCount: 800,
+                spacingFactor: 1.8,
+                interactionMode: 'none',
+                freezeMode: true,
+                idleStrength: 0,
+                maxScale: 1.5,
+                darkMode: false
+            }
         };
 
         // DEFAULT CONFIG
         const defaultConfig = JSON.parse(JSON.stringify(config));
 
-        // --- UTILITY FUNCTIONS ---
+        // KEYBOARD SHORTCUTS (v3.0)
+        function initKeyboardShortcuts() {
+            keyboardShortcuts = {
+                '?': () => showShortcutsHelp(),
+                'd': () => toggleDarkMode(),
+                'f': () => toggleFreeze(),
+                'r': () => resetAll(),
+                's': () => document.getElementById('saveBtn').click(),
+                'p': () => document.getElementById('shareBtn').click(),
+                'g': () => document.getElementById('open-gallery-btn').click(),
+                ' ': () => randomizeConfig(), // Space bar
+                '1': () => applyPreset('minimal'),
+                '2': () => applyPreset('chaotic'),
+                '3': () => applyPreset('organic'),
+                'Escape': () => closeAllModals(),
+                'ArrowUp': () => adjustSlider('scaleSlider', 0.1),
+                'ArrowDown': () => adjustSlider('scaleSlider', -0.1),
+                'ArrowLeft': () => adjustSlider('radiusSlider', -10),
+                'ArrowRight': () => adjustSlider('radiusSlider', 10)
+            };
+            
+            document.addEventListener('keydown', (e) => {
+                // Don't trigger in input fields
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                    return;
+                }
+                
+                const key = e.key.toLowerCase();
+                if (keyboardShortcuts[key]) {
+                    e.preventDefault();
+                    keyboardShortcuts[key]();
+                } else if (keyboardShortcuts[e.key]) {
+                    e.preventDefault();
+                    keyboardShortcuts[e.key]();
+                }
+            });
+        }
+
+        function showShortcutsHelp() {
+            showToast(
+                "Keyboard Shortcuts:<br>" +
+                "? = This help<br>" +
+                "D = Dark mode<br>" +
+                "F = Freeze<br>" +
+                "R = Reset all<br>" +
+                "S = Save PNG<br>" +
+                "P = Share<br>" +
+                "G = Gallery<br>" +
+                "Space = Randomize<br>" +
+                "1/2/3 = Presets<br>" +
+                "ESC = Close modals<br>" +
+                "Arrows = Adjust sliders",
+                'info',
+                5000
+            );
+        }
+
+        function adjustSlider(sliderId, delta) {
+            const slider = document.getElementById(sliderId);
+            if (slider) {
+                const current = parseFloat(slider.value);
+                const step = parseFloat(slider.step) || 1;
+                const min = parseFloat(slider.min) || 0;
+                const max = parseFloat(slider.max) || 100;
+                const newValue = Math.min(max, Math.max(min, current + delta * step));
+                slider.value = newValue;
+                slider.dispatchEvent(new Event('input'));
+            }
+        }
+
+        // --- UTILITY FUNCTIONS v3.0 ---
         function showToast(message, type = 'info', duration = 3000) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = message;
-            
-            if (type === 'warning') toast.style.borderLeftColor = '#ff9800';
-            else if (type === 'success') toast.style.borderLeftColor = '#4caf50';
-            else if (type === 'error') toast.style.borderLeftColor = '#f44336';
+            toast.className = `toast ${type}`;
+            toast.innerHTML = message;
             
             container.appendChild(toast);
             
+            // Auto-remove with animation
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
                 setTimeout(() => {
                     if (toast.parentNode) toast.parentNode.removeChild(toast);
                 }, 300);
             }, duration);
             
-            // Track analytics (Phase 5)
+            // Track analytics
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'toast', {
+                gtag('event', 'toast_shown', {
                     'event_category': 'ui',
                     'event_label': type,
-                    'value': message.length
+                    'value': duration
                 });
             }
         }
 
         function showComingSoon() {
-            showToast("Coming soon in a future update!", 'info');
+            showToast("Coming in next update!", 'info');
             return false;
         }
 
@@ -677,65 +1254,833 @@
             
             // Update indicator
             const indicator = document.getElementById('performance-indicator');
+            indicator.textContent = `FPS: ${fps} | Glyphs: ${grid.length}`;
+            
             if (fps < 45) {
                 indicator.style.display = 'block';
-                indicator.textContent = `FPS: ${fps}`;
-                indicator.style.color = fps < 30 ? '#ff4444' : '#ffaa00';
-                
-                // Auto-disable effects if performance is bad
-                if (fps < 30 && config.rippleEffect && !lowFPSWarningShown) {
-                    config.rippleEffect = false;
-                    document.getElementById('rippleToggle').checked = false;
-                    showToast("Disabled ripple effect for better performance", 'warning');
-                    lowFPSWarningShown = true;
+                if (fps < 30) {
+                    indicator.classList.add('low');
                     
-                    // Track performance event
-                    if (typeof gtag !== 'undefined') {
-                        gtag('event', 'performance_auto_disable', {
-                            'event_category': 'performance',
-                            'event_label': 'ripple',
-                            'value': fps
-                        });
+                    // Auto-quality adjustment
+                    if (config.qualityMode !== 'low' && !lowFPSWarningShown) {
+                        setQualityMode('low');
+                        showToast("Auto-switched to Low Quality for better performance", 'warning');
+                        lowFPSWarningShown = true;
+                        
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'auto_quality_adjust', {
+                                'event_category': 'performance',
+                                'event_label': 'low',
+                                'value': fps
+                            });
+                        }
                     }
+                } else {
+                    indicator.classList.remove('low');
                 }
             } else {
                 indicator.style.display = 'none';
                 lowFPSWarningShown = false;
             }
             
+            // Adaptive effects based on quality mode
+            applyQualitySettings();
+            
             return fps;
         }
 
-        // Phase 4: Dynamic font loading from JSON
-        function loadFontsFromJSON() {
+        function applyQualitySettings() {
+            if (!p5Instance) return;
+            
+            switch(config.qualityMode) {
+                case 'high':
+                    config.targetGlyphCount = Math.min(config.targetGlyphCount, 3000);
+                    config.idleStrength = 0.25;
+                    break;
+                case 'medium':
+                    config.targetGlyphCount = Math.min(config.targetGlyphCount, 1500);
+                    config.idleStrength = 0.15;
+                    if (config.glitchEffect) config.glitchAmount = 0.05;
+                    break;
+                case 'low':
+                    config.targetGlyphCount = Math.min(config.targetGlyphCount, 800);
+                    config.idleStrength = 0;
+                    config.glitchEffect = false;
+                    config.gravityEffect = false;
+                    updateUIFromConfig();
+                    break;
+            }
+        }
+
+        function setQualityMode(mode) {
+            config.qualityMode = mode;
+            document.querySelectorAll('.quality-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.quality === mode);
+            });
+            applyQualitySettings();
+            generateGrid();
+        }
+
+        // v2.3: Gallery functions
+        function saveToGallery() {
+            if (!grid.length) {
+                showToast("Create something first to save", 'warning');
+                return;
+            }
+            
+            const saveData = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                config: JSON.parse(JSON.stringify(config)),
+                activeText: config.activeText,
+                glyphCount: grid.length,
+                preview: getCanvasThumbnail()
+            };
+            
+            gallery.unshift(saveData);
+            if (gallery.length > 20) gallery.pop(); // Limit to 20 saves
+            
+            localStorage.setItem('typoUmprumGallery', JSON.stringify(gallery));
+            showToast(`Saved to gallery (${gallery.length}/20)`, 'success');
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'gallery_save', {
+                    'event_category': 'content',
+                    'event_label': 'local',
+                    'value': gallery.length
+                });
+            }
+        }
+
+        function loadFromGallery(id) {
+            const item = gallery.find(item => item.id === id);
+            if (!item) {
+                showToast("Could not load saved item", 'error');
+                return;
+            }
+            
+            // Load config
+            Object.keys(item.config).forEach(key => {
+                if (config.hasOwnProperty(key)) {
+                    config[key] = item.config[key];
+                }
+            });
+            
+            // Update UI
+            updateUIFromConfig();
+            
+            // Set text
+            document.getElementById('customInput').value = item.activeText;
+            updateSettings();
+            
+            showToast(`Loaded from ${new Date(item.timestamp).toLocaleDateString()}`, 'success');
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'gallery_load', {
+                    'event_category': 'content',
+                    'event_label': 'local'
+                });
+            }
+        }
+
+        function getCanvasThumbnail() {
+            const canvas = document.querySelector('canvas');
+            if (!canvas) return '';
+            
+            // Create small thumbnail
+            const smallCanvas = document.createElement('canvas');
+            const ctx = smallCanvas.getContext('2d');
+            smallCanvas.width = 100;
+            smallCanvas.height = 100;
+            
+            // Draw scaled version
+            ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 100, 100);
+            
+            return smallCanvas.toDataURL('image/jpeg', 0.5);
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('gallery-list');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (gallery.length === 0) {
+                container.innerHTML = '<p style="text-align: center; opacity: 0.7; padding: 20px;">No saved creations yet</p>';
+                return;
+            }
+            
+            gallery.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.dataset.id = item.id;
+                
+                const date = new Date(item.timestamp).toLocaleString();
+                div.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 40px; height: 40px; border: 1px solid #000; background: #eee; 
+                             background-image: url('${item.preview}'); background-size: cover;"></div>
+                        <div style="flex: 1;">
+                            <div>${item.activeText.substring(0, 30)}${item.activeText.length > 30 ? '...' : ''}</div>
+                            <div class="gallery-meta">${date} • ${item.glyphCount} glyphs • ${item.config.lastFontName}</div>
+                        </div>
+                    </div>
+                `;
+                
+                div.addEventListener('click', () => {
+                    document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                });
+                
+                container.appendChild(div);
+            });
+        }
+
+        // v3.0: Font mixing feature
+        function mixFonts() {
+            if (Object.keys(availableFonts).length < 2) {
+                showToast("Need at least 2 fonts to mix", 'warning');
+                return;
+            }
+            
+            const fontNames = Object.keys(availableFonts);
+            const randomFont1 = fontNames[Math.floor(Math.random() * fontNames.length)];
+            const randomFont2 = fontNames[Math.floor(Math.random() * fontNames.length)];
+            
+            if (randomFont1 === randomFont2) {
+                mixFonts(); // Try again
+                return;
+            }
+            
+            config.mixedFonts = true;
+            config.fontMix = [randomFont1, randomFont2];
+            
+            showToast(`Mixing ${randomFont1} + ${randomFont2}`, 'info');
+            generateGrid();
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'font_mix', {
+                    'event_category': 'fonts',
+                    'event_label': `${randomFont1}_${randomFont2}`
+                });
+            }
+        }
+
+        // v2.1: Freeze functionality
+        function toggleFreeze() {
+            config.freezeMode = !config.freezeMode;
+            document.getElementById('freezeToggle').checked = config.freezeMode;
+            document.body.classList.toggle('frozen-mode', config.freezeMode);
+            
+            if (config.freezeMode) {
+                // Capture frozen state
+                frozenState = {
+                    grid: JSON.parse(JSON.stringify(grid)),
+                    lastTx: config.lastTx,
+                    lastTy: config.lastTy,
+                    timestamp: Date.now()
+                };
+                showToast("Canvas frozen", 'info');
+            } else {
+                showToast("Canvas unfrozen", 'info');
+            }
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'freeze_toggle', {
+                    'event_category': 'effects',
+                    'event_label': config.freezeMode ? 'enabled' : 'disabled'
+                });
+            }
+        }
+
+        function toggleDarkMode() {
+            config.darkMode = !config.darkMode;
+            document.getElementById('darkToggle').checked = config.darkMode;
+            document.body.classList.toggle('dark-mode', config.darkMode);
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'dark_mode_toggle', {
+                    'event_category': 'ui',
+                    'event_label': config.darkMode ? 'enabled' : 'disabled'
+                });
+            }
+        }
+
+        // v3.0: Update URL for sharing
+        function updateShareURL() {
+            const params = new URLSearchParams();
+            
+            // Core settings
+            params.set('v', config.version);
+            params.set('font', config.lastFontName);
+            params.set('style', config.lastStyleIndex);
+            params.set('text', encodeURIComponent(config.activeText.substring(0, 200)));
+            params.set('density', config.targetGlyphCount);
+            params.set('radius', config.interactionRadius);
+            params.set('scale', config.maxScale.toFixed(1));
+            params.set('mode', config.interactionMode);
+            params.set('dark', config.darkMode ? '1' : '0');
+            params.set('freeze', config.freezeMode ? '1' : '0');
+            params.set('quality', config.qualityMode);
+            
+            // Effects
+            if (config.inverseMode) params.set('ink', '1');
+            if (config.glitchEffect) params.set('glitch', '1');
+            if (config.gravityEffect) params.set('gravity', '1');
+            params.set('idle', config.idleStrength.toFixed(2));
+            
+            const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            document.getElementById('share-url').value = url;
+            return url;
+        }
+
+        function applyPreset(presetName) {
+            if (!presets[presetName]) {
+                showToast(`Preset "${presetName}" not found`, 'error');
+                return;
+            }
+            
+            const preset = presets[presetName];
+            Object.keys(preset).forEach(key => {
+                if (config.hasOwnProperty(key)) {
+                    config[key] = preset[key];
+                }
+            });
+            
+            updateUIFromConfig();
+            generateGrid();
+            
+            showToast(`Applied "${presetName}" preset`, 'success');
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'preset_apply', {
+                    'event_category': 'config',
+                    'event_label': presetName
+                });
+            }
+        }
+
+        function randomizeConfig() {
+            // Randomize key parameters
+            config.interactionRadius = Math.floor(Math.random() * 500) + 100;
+            config.maxScale = Math.random() * 5 + 1.5;
+            config.idleStrength = Math.random() * 0.5;
+            config.effectStrength = Math.random() * 2;
+            
+            // Random effects
+            config.glitchEffect = Math.random() > 0.7;
+            config.gravityEffect = Math.random() > 0.7;
+            config.interactionMode = ['ink', 'ripple', 'gravity', 'none'][Math.floor(Math.random() * 4)];
+            
+            // Random font if available
+            const fontNames = Object.keys(availableFonts);
+            if (fontNames.length > 0) {
+                const randomFont = fontNames[Math.floor(Math.random() * fontNames.length)];
+                config.lastFontName = randomFont;
+                document.getElementById('fontSelect').value = randomFont;
+                document.getElementById('fontSelect').dispatchEvent(new Event('change'));
+            }
+            
+            updateUIFromConfig();
+            generateGrid();
+            
+            showToast("Randomized configuration", 'info');
+            
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'randomize', {
+                    'event_category': 'config'
+                });
+            }
+        }
+
+        // --- P5 SKETCH v3.0 ---
+        function sketch(p) {
+            p5Instance = p;
+
+            p.setup = function() {
+                let container = document.getElementById('canvas-container');
+                let cnv = p.createCanvas(container.offsetWidth, container.offsetHeight);
+                cnv.parent('canvas-container');
+                cnv.canvas.oncontextmenu = () => false;
+                
+                p.textAlign(p.CENTER, p.CENTER);
+                p.rectMode(p.CENTER);
+                p.frameRate(60);
+                
+                // Load fonts dynamically
+                loadFonts();
+                
+                // Load gallery from localStorage
+                const savedGallery = localStorage.getItem('typoUmprumGallery');
+                if (savedGallery) {
+                    try {
+                        gallery = JSON.parse(savedGallery);
+                    } catch (e) {
+                        console.error('Failed to load gallery:', e);
+                    }
+                }
+                
+                // Initialize keyboard shortcuts
+                initKeyboardShortcuts();
+                
+                // Wait for fonts
+                document.fonts.ready.then(() => {
+                    const loadStart = performance.now();
+                    fontLoaded = true;
+                    
+                    // Hide loader with animation
+                    document.getElementById('loader').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loader').style.display = 'none';
+                        
+                        // Initial grid
+                        generateGrid();
+                        
+                        const loadTime = performance.now() - loadStart;
+                        showToast(`Studio Hub v3.0 ready in ${loadTime.toFixed(0)}ms`, 'success', 2000);
+                        
+                        // Track page load
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'page_load_v3', {
+                                'event_category': 'engagement',
+                                'event_label': 'v3.0',
+                                'value': Math.round(loadTime)
+                            });
+                        }
+                    }, 500);
+                }).catch(err => {
+                    console.error('Font loading error:', err);
+                    fontLoaded = true;
+                    document.getElementById('loader').style.display = 'none';
+                    generateGrid();
+                });
+
+                // Fallback timeout
+                setTimeout(() => {
+                    if (!fontLoaded) {
+                        fontLoaded = true;
+                        document.getElementById('loader').style.display = 'none';
+                        generateGrid();
+                        showToast("Fonts loaded with fallback", 'warning');
+                    }
+                }, 7000);
+            };
+
+            p.draw = function() {
+                // Performance monitoring
+                const fps = checkPerformance();
+                
+                // Handle freeze mode (v2.1)
+                if (config.freezeMode && frozenState) {
+                    drawFrozen(p);
+                    return;
+                }
+                
+                // Normal drawing
+                p.background(config.darkMode ? 0 : 255);
+                if (!fontLoaded || grid.length === 0) return;
+                
+                // Update mouse position
+                let tx = p.mouseX;
+                let ty = p.mouseY;
+                if (p.touches.length > 0) {
+                    tx = p.touches[0].x;
+                    ty = p.touches[0].y;
+                }
+                if (tx === 0 && ty === 0 && p.frameCount < 10) {
+                    tx = -5000;
+                    ty = -5000;
+                }
+                
+                config.lastTx = tx;
+                config.lastTy = ty;
+                
+                // Interaction effects
+                applyInteractionEffects(p, tx, ty);
+                
+                // Draw ink effect if enabled
+                if (config.inverseMode && config.interactionMode === 'ink') {
+                    drawInkEffect(p, tx, ty, fps);
+                }
+                
+                // Draw all glyphs
+                drawGlyphs(p, tx, ty);
+            };
+
+            p.windowResized = function() {
+                let container = document.getElementById('canvas-container');
+                p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+                updateDensitySliderMax();
+                generateGrid();
+            };
+        }
+
+        // Initialize P5
+        new p5(sketch);
+
+        // --- DRAWING FUNCTIONS v3.0 ---
+        function drawFrozen(p) {
+            p.background(config.darkMode ? 0 : 255);
+            
+            // Draw frozen ink
+            if (config.inverseMode && config.interactionMode === 'ink') {
+                drawInkEffect(p, frozenState.lastTx, frozenState.lastTy, 60, true);
+            }
+            
+            // Draw frozen glyphs
+            for (let g of frozenState.grid) {
+                p.fill(config.darkMode ? 255 : 0);
+                p.push();
+                p.translate(g.x, g.y);
+                p.scale(g.lastScl || 1);
+                p.rotate(g.lastRot || 0);
+                p.text(g.char, 0, 0);
+                p.pop();
+            }
+        }
+
+        function drawInkEffect(p, tx, ty, fps, frozen = false) {
+            p.push();
+            p.translate(tx, ty);
+            
+            // Quality-based blur
+            let blurAmount = 40;
+            if (config.qualityMode === 'medium') blurAmount = 20;
+            if (config.qualityMode === 'low') blurAmount = 10;
+            if (fps < 40 && !frozen) blurAmount = Math.min(blurAmount, 15);
+            
+            // Dark mode ink color
+            const opacity = frozen ? 200 : p.map(p.noise(p.frameCount * 0.01), 0, 1, 180, 240);
+            p.fill(config.darkMode ? 255 : 0, opacity);
+            
+            p.drawingContext.filter = `blur(${blurAmount}px)`;
+            p.beginShape();
+            
+            for (let a = 0; a < p.TWO_PI; a += 0.08) {
+                let noiseVal = frozen ? 0.5 : p.noise(
+                    p.cos(a) * 1.5 + 1,
+                    p.sin(a) * 1.5 + 1,
+                    p.frameCount * 0.02
+                );
+                let r = config.interactionRadius + p.map(noiseVal, 0, 1, -80, 80);
+                p.vertex(r * p.cos(a), r * p.sin(a));
+            }
+            p.endShape(p.CLOSE);
+            p.drawingContext.filter = 'none';
+            p.pop();
+        }
+
+        function applyInteractionEffects(p, tx, ty) {
+            for (let i = 0; i < grid.length; i++) {
+                let g = grid[i];
+                
+                // Apply damping to velocities
+                if (g.vx !== undefined) g.vx *= config.rippleDamping;
+                if (g.vy !== undefined) g.vy *= config.rippleDamping;
+                
+                // Calculate distance to cursor
+                let d = p.dist(tx, ty, g.x, g.y);
+                
+                // Apply interaction effects
+                if (d < config.interactionRadius && !config.freezeMode) {
+                    let normalizedDist = p.map(d, 0, config.interactionRadius, 0, 1);
+                    let proximity = (1 - normalizedDist) * config.effectStrength;
+                    
+                    // Ripple effect
+                    if (config.interactionMode === 'ripple' && g.vx !== undefined) {
+                        let angle = p.atan2(g.baseY - ty, g.baseX - tx);
+                        let force = proximity * 20;
+                        g.vx += p.cos(angle) * force;
+                        g.vy += p.sin(angle) * force;
+                    }
+                    
+                    // Gravity effect (v2.1)
+                    if (config.interactionMode === 'gravity' && g.vx !== undefined) {
+                        let dx = tx - g.x;
+                        let dy = ty - g.y;
+                        let force = proximity * config.gravityStrength * 100;
+                        g.vx += dx * force;
+                        g.vy += dy * force;
+                    }
+                    
+                    // Glitch effect (v2.1)
+                    if (config.glitchEffect && p.random() < proximity * config.glitchAmount) {
+                        g.tempX = g.x + p.random(-proximity * 20, proximity * 20);
+                        g.tempY = g.y + p.random(-proximity * 20, proximity * 20);
+                    }
+                }
+                
+                // Reset temporary glitch positions
+                if (g.tempX !== undefined && p.random() < 0.1) {
+                    g.tempX = undefined;
+                    g.tempY = undefined;
+                }
+                
+                // Boundary constraints
+                const maxVel = config.qualityMode === 'low' ? 20 : 50;
+                if (g.vx !== undefined) {
+                    g.vx = p.constrain(g.vx, -maxVel, maxVel);
+                    g.vy = p.constrain(g.vy, -maxVel, maxVel);
+                    
+                    // Apply velocities
+                    g.x += g.vx;
+                    g.y += g.vy;
+                    
+                    // Slow return to base position
+                    g.x = p.lerp(g.x, g.baseX, 0.01);
+                    g.y = p.lerp(g.y, g.baseY, 0.01);
+                    
+                    // Boundary bounce
+                    if (g.x < 0 || g.x > p.width) g.vx *= -0.5;
+                    if (g.y < 0 || g.y > p.height) g.vy *= -0.5;
+                }
+            }
+        }
+
+        function drawGlyphs(p, tx, ty) {
+            p.noStroke();
+            
+            for (let i = 0; i < grid.length; i++) {
+                let g = grid[i];
+                
+                // Determine position (with glitch temp positions)
+                let drawX = g.tempX !== undefined ? g.tempX : g.x;
+                let drawY = g.tempY !== undefined ? g.tempY : g.y;
+                
+                // Calculate distance for scale/color
+                let d = p.dist(tx, ty, drawX, drawY);
+                let scl = 1;
+                let rot = 0;
+                
+                if (d < config.interactionRadius && !config.freezeMode) {
+                    let normalizedDist = p.map(d, 0, config.interactionRadius, 0, 1);
+                    let proximity = (1 - normalizedDist) * config.effectStrength;
+                    
+                    // Scale
+                    scl = 1 + (config.maxScale - 1) * (proximity * proximity);
+                    
+                    // Rotation
+                    rot = g.angleOffset * proximity * (p.PI / 4);
+                    
+                    // Store for freeze mode
+                    g.lastScl = scl;
+                    g.lastRot = rot;
+                } else {
+                    // Idle motion
+                    if (config.idleStrength > 0 && !config.freezeMode) {
+                        rot += (p.noise(g.x * 0.01, g.y * 0.01, p.frameCount * 0.005) - 0.5) * config.idleStrength;
+                        g.lastRot = rot;
+                    }
+                    g.lastScl = scl;
+                }
+                
+                // Font selection (for mixed fonts)
+                let fontFamily = config.currentFontFamily;
+                if (config.mixedFonts && config.fontMix.length >= 2) {
+                    // Alternate fonts for mixed effect
+                    const fontIndex = i % 2;
+                    const fontData = availableFonts[config.fontMix[fontIndex]];
+                    fontFamily = fontData.cssFamilies[0];
+                }
+                
+                p.textFont(fontFamily);
+                p.textSize(config.baseFontSize);
+                
+                // Color logic
+                if (config.inverseMode && config.interactionMode === 'ink') {
+                    p.fill(d < config.interactionRadius * 0.75 ? 
+                        (config.darkMode ? 0 : 255) : 
+                        (config.darkMode ? 255 : 0));
+                } else {
+                    p.fill(config.darkMode ? 255 : 0);
+                }
+                
+                // Draw glyph
+                p.push();
+                p.translate(drawX, drawY);
+                p.scale(scl);
+                p.rotate(rot);
+                
+                // Text alignment
+                let alignOffset = 0;
+                if (config.alignment === 0) { // Left
+                    p.textAlign(p.LEFT, p.CENTER);
+                    alignOffset = -g.charWidth / 2;
+                } else if (config.alignment === 2) { // Right
+                    p.textAlign(p.RIGHT, p.CENTER);
+                    alignOffset = g.charWidth / 2;
+                }
+                
+                p.text(g.char, alignOffset, 0);
+                p.pop();
+            }
+        }
+
+        // --- GRID GENERATION v3.0 ---
+        function generateGrid() {
+            if (!p5Instance || !fontLoaded) return;
+            
+            try {
+                let p = p5Instance;
+                grid = [];
+                velocityGrid = [];
+                
+                // Set font for measurements
+                const fontData = availableFonts[config.lastFontName] || availableFonts[Object.keys(availableFonts)[0]];
+                if (!fontData) return;
+                
+                config.currentFontFamily = fontData.cssFamilies[config.lastStyleIndex || 0];
+                p.textFont(config.currentFontFamily);
+                p.textSize(config.baseFontSize);
+                
+                // Calculate grid with quality settings
+                let limit = (p.width < 800) ? config.mobileMaxGlyphs : 
+                           config.qualityMode === 'high' ? 3000 :
+                           config.qualityMode === 'medium' ? 1500 : 800;
+                
+                config.targetGlyphCount = Math.min(config.targetGlyphCount, limit);
+                
+                let area = p.width * p.height;
+                let avgAreaPerGlyph = area / config.targetGlyphCount;
+                let spacing = p.sqrt(avgAreaPerGlyph) * config.spacingFactor;
+                
+                let gridSpacingX = spacing * 0.85;
+                let gridSpacingY = spacing * 1.15;
+                
+                let cols = p.floor(p.width / gridSpacingX);
+                let rows = p.floor(p.height / gridSpacingY);
+                
+                let startX = (p.width - (cols * gridSpacingX)) / 2 + gridSpacingX / 2;
+                let startY = (p.height - (rows * gridSpacingY)) / 2 + gridSpacingY / 2;
+                
+                // Adjust for alignment
+                if (config.alignment === 0) startX = gridSpacingX / 2;
+                if (config.alignment === 2) startX = p.width - gridSpacingX / 2;
+                
+                let textIdx = 0;
+                let txt = config.activeText || fontData.sampleText;
+                
+                // Handle text length
+                if (txt.length < 5) {
+                    txt = fontData.sampleText;
+                }
+                
+                if (txt.length < 20) {
+                    txt = txt.repeat(Math.ceil(100 / txt.length));
+                }
+                
+                // Update character count display
+                document.getElementById('char-count').textContent = `${txt.length} chars`;
+                
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        let char = txt.charAt(textIdx % txt.length);
+                        textIdx++;
+                        
+                        let x = startX + (c * gridSpacingX);
+                        let y = startY + (r * gridSpacingY);
+                        
+                        grid.push({
+                            char: char,
+                            x: x,
+                            y: y,
+                            baseX: x,
+                            baseY: y,
+                            angleOffset: p.random(-1, 1),
+                            vx: 0,
+                            vy: 0,
+                            lastScl: 1,
+                            lastRot: 0,
+                            charWidth: p.textWidth(char)
+                        });
+                    }
+                }
+                
+                // Update glyph count display
+                document.getElementById('glyph-count').textContent = `${grid.length} glyphs`;
+                
+                // Track grid generation
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'grid_generated_v3', {
+                        'event_category': 'grid',
+                        'event_label': config.lastFontName,
+                        'value': grid.length,
+                        'quality': config.qualityMode
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Grid generation error:', error);
+                showToast("Error generating grid", 'error');
+            }
+        }
+
+        // --- FONT MANAGEMENT v3.0 ---
+        function loadFonts() {
+            // Try to load from JSON first
             fetch('fonts.json')
                 .then(res => {
-                    if (!res.ok) throw new Error('Failed to load fonts.json');
+                    if (!res.ok) throw new Error('fonts.json not found');
                     return res.json();
                 })
                 .then(data => {
                     availableFonts = data;
-                    populateFontSelect();
                     loadDynamicFontFaces(data);
-                    showToast("Fonts loaded dynamically", 'success');
+                    populateFontSelect();
                     
-                    // Track analytics
-                    if (typeof gtag !== 'undefined') {
-                        gtag('event', 'fonts_loaded', {
-                            'event_category': 'fonts',
-                            'event_label': 'dynamic',
-                            'value': Object.keys(data).length
-                        });
+                    // Set default text from first font
+                    const firstFont = Object.keys(data)[0];
+                    if (firstFont) {
+                        config.activeText = data[firstFont].sampleText;
+                        config.lastFontName = firstFont;
                     }
+                    
+                    showToast("Fonts loaded dynamically", 'success');
                 })
                 .catch(err => {
                     console.log('Using default fonts:', err);
+                    
+                    // Fallback to hardcoded fonts
+                    availableFonts = {
+                        'Ananas': {
+                            sampleText: "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest...",
+                            styles: ['Regular', 'Italic'],
+                            cssFamilies: ['AnanasRegular', 'AnanasItalic'],
+                            author: 'Jaromír Květoň',
+                            year: 2025
+                        },
+                        'Chlebiczech': {
+                            sampleText: "Jeho jméno jsem zapomněl, prý provádí nárazové obchody s neřestmi...",
+                            styles: ['Regular'],
+                            cssFamilies: ['ChlebiczechRegular'],
+                            author: 'Žofia Kosová',
+                            year: 2025
+                        },
+                        'Korchma': {
+                            sampleText: "Вона імітує запальний погляд, тріумфально оживаючи у темряві...",
+                            styles: ['Regular', 'Italic'],
+                            cssFamilies: ['KorchmaRegular', 'KorchmaItalic'],
+                            author: 'Anna Sherlupenkova',
+                            year: 2025
+                        },
+                        'März Grotesk': {
+                            sampleText: "During the Thirty Years' War, the Swedes wanted to use it as a weapon...",
+                            styles: ['Bold'],
+                            cssFamilies: ['MarzGroteskBold'],
+                            author: 'Šimon Vlasák',
+                            year: 2025
+                        }
+                    };
+                    
                     populateFontSelect();
-                    showToast("Using default fonts", 'warning');
+                    
+                    // Set default
+                    config.activeText = availableFonts['Ananas'].sampleText;
+                    
+                    showToast("Using default fonts", 'info');
                 });
         }
 
-        // Phase 4: Dynamic @font-face injection
         function loadDynamicFontFaces(fonts) {
             const styleEl = document.createElement('style');
             styleEl.id = 'dynamic-font-faces';
@@ -746,8 +2091,6 @@
                     const style = font.styles[i];
                     const weight = style.includes('Bold') ? 'bold' : 'normal';
                     const fontStyle = style.includes('Italic') ? 'italic' : 'normal';
-                    
-                    // Try to construct font file name
                     const fileName = `${fontName}-${style}.woff2`;
                     
                     styleEl.innerHTML += `
@@ -769,353 +2112,133 @@
             document.head.appendChild(styleEl);
         }
 
-        // --- P5 SKETCH v2.0 ---
-        function sketch(p) {
-            p5Instance = p;
-
-            p.setup = function() {
-                let container = document.getElementById('canvas-container');
-                let cnv = p.createCanvas(container.offsetWidth, container.offsetHeight);
-                cnv.parent('canvas-container');
-                cnv.canvas.oncontextmenu = () => false;
+        function populateFontSelect() {
+            const fontSelect = document.getElementById('fontSelect');
+            if (!fontSelect || Object.keys(availableFonts).length === 0) return;
+            
+            fontSelect.innerHTML = '';
+            
+            // Sort by year (newest first)
+            const sortedFonts = Object.keys(availableFonts).sort((a, b) => {
+                return availableFonts[b].year - availableFonts[a].year;
+            });
+            
+            // Find newest font for featured button
+            const newestFont = sortedFonts[0];
+            
+            sortedFonts.forEach(fontName => {
+                const fontData = availableFonts[fontName];
+                const option = document.createElement('option');
+                option.value = fontName;
+                option.text = `${fontName} (${fontData.author}, ${fontData.year})`;
+                option.title = `${fontData.author} · ${fontData.year}`;
                 
-                p.textAlign(p.CENTER, p.CENTER);
-                p.rectMode(p.CENTER);
-                p.frameRate(60);
-                
-                // Phase 4: Load fonts dynamically or use defaults
-                if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    loadFontsFromJSON();
-                } else {
-                    // Local development - use hardcoded fonts
-                    setTimeout(() => {
-                        populateFontSelect();
-                        showToast("Development mode - using default fonts", 'info');
-                    }, 100);
+                // Mark as newest
+                if (fontName === newestFont) {
+                    option.text += ' ⭐';
                 }
                 
-                // Wait for fonts to load
-                document.fonts.ready.then(() => {
-                    const loadStart = performance.now();
-                    
-                    fontLoaded = true;
-                    document.getElementById('loader').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('loader').style.display = 'none';
-                        generateGrid();
-                        
-                        const loadTime = performance.now() - loadStart;
-                        showToast(`v2.0 loaded in ${loadTime.toFixed(0)}ms`, 'success');
-                        
-                        // Track page load
-                        if (typeof gtag !== 'undefined') {
-                            gtag('event', 'page_load', {
-                                'event_category': 'engagement',
-                                'event_label': 'v2.0',
-                                'value': Math.round(loadTime)
-                            });
-                        }
-                    }, 500);
-                }).catch(err => {
-                    console.error('Font loading error:', err);
-                    fontLoaded = true;
-                    document.getElementById('loader').style.display = 'none';
-                    generateGrid();
-                });
-
-                // Fallback timeout
-                setTimeout(() => {
-                    if (!fontLoaded) {
-                        fontLoaded = true;
-                        document.getElementById('loader').style.display = 'none';
-                        generateGrid();
-                        showToast("Fonts loading slowly - continuing", 'warning');
-                    }
-                }, 5000);
-            };
-
-            p.draw = function() {
-                // Performance monitoring
-                const fps = checkPerformance();
-                
-                // Phase 1: Dark mode background
-                p.background(config.darkMode ? 0 : 255);
-                if (!fontLoaded || grid.length === 0) return;
-                
-                // Set font
-                p.textFont(config.currentFontFamily);
-                p.textSize(config.baseFontSize);
-                p.noStroke();
-
-                // Get interaction position
-                let tx = p.mouseX;
-                let ty = p.mouseY;
-                if (p.touches.length > 0) {
-                    tx = p.touches[0].x;
-                    ty = p.touches[0].y;
-                }
-                if (tx === 0 && ty === 0 && p.frameCount < 10) {
-                    tx = -5000;
-                    ty = -5000;
-                }
-
-                // Phase 1: Liquid Ink Effect with dark mode support
-                if (config.inverseMode) {
-                    p.push();
-                    p.translate(tx, ty);
-                    
-                    // Dynamic blur based on performance
-                    let blurAmount = 40;
-                    if (p.width < 800) blurAmount = 20;
-                    if (fps < 40) blurAmount = 10;
-                    
-                    // Phase 1: Dark mode ink color
-                    const opacity = p.map(p.noise(p.frameCount * 0.01), 0, 1, 180, 240);
-                    p.fill(config.darkMode ? 255 : 0, opacity);
-                    
-                    p.drawingContext.filter = `blur(${blurAmount}px)`;
-                    p.beginShape();
-                    for (let a = 0; a < p.TWO_PI; a += 0.1) {
-                        let noiseVal = p.noise(
-                            p.cos(a) + 1,
-                            p.sin(a) + 1,
-                            p.frameCount * 0.015
-                        );
-                        let r = config.interactionRadius + p.map(noiseVal, 0, 1, -60, 60);
-                        p.vertex(r * p.cos(a), r * p.sin(a));
-                    }
-                    p.endShape(p.CLOSE);
-                    p.drawingContext.filter = 'none';
-                    p.pop();
-                }
-
-                // Phase 2: Ripple effect updates
-                if (config.rippleEffect) {
-                    for (let i = 0; i < grid.length; i++) {
-                        let g = grid[i];
-                        
-                        // Apply damping
-                        if (g.vx) g.vx *= config.rippleDamping;
-                        if (g.vy) g.vy *= config.rippleDamping;
-                        
-                        // Clamp velocities
-                        const maxVel = 30;
-                        if (g.vx) g.vx = p.constrain(g.vx, -maxVel, maxVel);
-                        if (g.vy) g.vy = p.constrain(g.vy, -maxVel, maxVel);
-                        
-                        // Boundary bounce
-                        if (g.x < 0 || g.x > p.width) {
-                            if (g.vx) g.vx *= -0.5;
-                        }
-                        if (g.y < 0 || g.y > p.height) {
-                            if (g.vy) g.vy *= -0.5;
-                        }
-                    }
-                }
-
-                // Draw glyphs
-                for (let i = 0; i < grid.length; i++) {
-                    let g = grid[i];
-                    let targetX = g.x;
-                    let targetY = g.y;
-                    
-                    // Phase 2: Apply ripple positions
-                    if (config.rippleEffect && g.vx !== undefined && g.vy !== undefined) {
-                        targetX = g.baseX + g.vx;
-                        targetY = g.baseY + g.vy;
-                    }
-                    
-                    let d = p.dist(tx, ty, targetX, targetY);
-                    let scl = 1;
-                    let rot = 0;
-
-                    if (d < config.interactionRadius) {
-                        let normalizedDist = p.map(d, 0, config.interactionRadius, 0, 1);
-                        let proximity = 1 - normalizedDist;
-                        
-                        // Scale
-                        scl = 1 + (config.maxScale - 1) * (proximity * proximity);
-                        
-                        // Rotation
-                        rot = g.angleOffset * proximity * (p.PI / 4);
-                        
-                        // Phase 2: Ripple effect trigger
-                        if (config.rippleEffect && g.vx !== undefined && g.vy !== undefined) {
-                            let angle = p.atan2(g.baseY - ty, g.baseX - tx);
-                            let force = proximity * 15;
-                            g.vx += p.cos(angle) * force;
-                            g.vy += p.sin(angle) * force;
-                        }
-                    }
-                    
-                    // Phase 2: Idle movement
-                    if (config.idleStrength > 0) {
-                        rot += (p.noise(g.x * 0.01, g.y * 0.01, p.frameCount * 0.005) - 0.5) * config.idleStrength;
-                    }
-
-                    // Phase 1: Color based on mode and dark mode
-                    if (config.inverseMode) {
-                        p.fill(d < config.interactionRadius * 0.75 ? 
-                            (config.darkMode ? 0 : 255) : 
-                            (config.darkMode ? 255 : 0));
-                    } else {
-                        p.fill(config.darkMode ? 255 : 0);
-                    }
-
-                    // Draw glyph
-                    p.push();
-                    p.translate(targetX, targetY);
-                    p.scale(scl);
-                    p.rotate(rot);
-                    p.text(g.char, 0, 0);
-                    p.pop();
-                }
-            };
-
-            p.windowResized = function() {
-                let container = document.getElementById('canvas-container');
-                p.resizeCanvas(container.offsetWidth, container.offsetHeight);
-                updateDensitySliderMax();
-                generateGrid();
-            };
+                fontSelect.appendChild(option);
+            });
+            
+            // Set initial selection
+            if (sortedFonts.includes(config.lastFontName)) {
+                fontSelect.value = config.lastFontName;
+            } else {
+                fontSelect.selectedIndex = 0;
+                config.lastFontName = fontSelect.value;
+            }
+            
+            // Update style dropdown
+            updateStyleDropdown();
+            
+            // Update "view on site" link
+            updateFontSiteLink();
+            
+            // Trigger initial update
+            setTimeout(() => {
+                fontSelect.dispatchEvent(new Event('change'));
+            }, 100);
         }
 
-        // Initialize P5
-        new p5(sketch);
-
-        // --- GRID GENERATION ---
-        function generateGrid() {
-            if (!p5Instance || !fontLoaded) return;
+        function updateStyleDropdown() {
+            const styleSelect = document.getElementById('styleSelect');
+            const fontData = availableFonts[config.lastFontName];
             
-            try {
-                let p = p5Instance;
-                grid = [];
-                
-                p.textFont(config.currentFontFamily);
-                p.textSize(config.baseFontSize);
+            if (!fontData || !styleSelect) return;
+            
+            styleSelect.innerHTML = '';
+            fontData.styles.forEach((style, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.text = style;
+                styleSelect.appendChild(option);
+            });
+            
+            styleSelect.value = config.lastStyleIndex;
+        }
 
-                // Calculate grid with mobile limits
-                let limit = (p.width < 800) ? config.mobileMaxGlyphs : 2500;
-                config.targetGlyphCount = Math.min(config.targetGlyphCount, limit);
-                
-                let area = p.width * p.height;
-                let avgAreaPerGlyph = area / config.targetGlyphCount;
-                let spacing = p.sqrt(avgAreaPerGlyph);
-
-                let gridSpacingX = spacing * 0.85;
-                let gridSpacingY = spacing * 1.15;
-
-                let cols = p.floor(p.width / gridSpacingX);
-                let rows = p.floor(p.height / gridSpacingY);
-                
-                let startX = (p.width - (cols * gridSpacingX)) / 2 + gridSpacingX / 2;
-                let startY = (p.height - (rows * gridSpacingY)) / 2 + gridSpacingY / 2;
-
-                let textIdx = 0;
-                let txt = config.activeText;
-                
-                if (txt.length < 5) {
-                    showToast("Text too short - using sample", 'warning');
-                    txt = availableFonts[config.lastFontName].sampleText;
-                }
-                
-                if (txt.length < 20) {
-                    txt = txt.repeat(Math.ceil(100 / txt.length));
-                }
-
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        let char = txt.charAt(textIdx % txt.length);
-                        textIdx++;
-                        grid.push({
-                            char: char,
-                            x: startX + (c * gridSpacingX),
-                            y: startY + (r * gridSpacingY),
-                            baseX: startX + (c * gridSpacingX),
-                            baseY: startY + (r * gridSpacingY),
-                            angleOffset: p.random(-1, 1),
-                            vx: 0, // Phase 2: Ripple velocity
-                            vy: 0
-                        });
-                    }
-                }
-                
-                // Track grid generation
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'grid_generated', {
-                        'event_category': 'grid',
-                        'event_label': config.lastFontName,
-                        'value': grid.length
-                    });
-                }
-                
-            } catch (error) {
-                console.error('Grid generation error:', error);
-                showToast("Error generating grid", 'error');
+        function updateFontSiteLink() {
+            const link = document.getElementById('view-font-site');
+            if (link) {
+                // Create a slug from font name
+                const slug = config.lastFontName.toLowerCase().replace(/\s+/g, '-');
+                link.href = `typefaces.php#${slug}`;
+                link.title = `View ${config.lastFontName} on typoumprum.cz`;
             }
         }
 
-        // --- UI UPDATES ---
+        // --- UI UPDATES v3.0 ---
         function updateSettings() {
             if (!fontLoaded) return;
             
             try {
-                let fontSelect = document.getElementById('fontSelect');
-                let styleSelect = document.getElementById('styleSelect');
-                let fontName = fontSelect.value;
-                let fontData = availableFonts[fontName];
+                const fontSelect = document.getElementById('fontSelect');
+                const styleSelect = document.getElementById('styleSelect');
+                const customInput = document.getElementById('customInput');
                 
-                config.currentFontFamily = fontData.cssFamilies[styleSelect.value];
-                config.lastFontName = fontName;
+                // Update font
+                config.lastFontName = fontSelect.value;
                 config.lastStyleIndex = parseInt(styleSelect.value);
                 
-                // Update text
-                let customInput = document.getElementById('customInput');
-                let userText = customInput.value.trim();
-                
-                if (userText.length >= 5) {
-                    config.activeText = userText;
-                } else if (userText.length > 0) {
-                    showToast("Text too short - need at least 5 characters", 'warning');
-                    config.activeText = fontData.sampleText;
-                } else {
-                    config.activeText = fontData.sampleText;
+                const fontData = availableFonts[config.lastFontName];
+                if (fontData) {
+                    config.currentFontFamily = fontData.cssFamilies[config.lastStyleIndex];
+                    
+                    // Update text
+                    const userText = customInput.value.trim();
+                    if (userText.length >= 5) {
+                        config.activeText = userText;
+                    } else if (userText.length > 0) {
+                        showToast("Text too short - need at least 5 characters", 'warning');
+                        config.activeText = fontData.sampleText;
+                        customInput.value = '';
+                    } else {
+                        config.activeText = fontData.sampleText;
+                    }
                 }
                 
+                // Update font site link
+                updateFontSiteLink();
+                
+                // Regenerate grid
                 generateGrid();
+                
+                // Update share URL
+                updateShareURL();
                 
                 // Track font change
                 if (typeof gtag !== 'undefined') {
-                    gtag('event', 'font_change', {
+                    gtag('event', 'font_change_v3', {
                         'event_category': 'fonts',
-                        'event_label': fontName,
-                        'value': styleSelect.value
+                        'event_label': config.lastFontName,
+                        'style': config.lastStyleIndex
                     });
                 }
                 
             } catch (error) {
                 console.error('Settings error:', error);
-            }
-        }
-
-        function populateFontSelect() {
-            const fontSelect = document.getElementById('fontSelect');
-            if (!fontSelect) return;
-            
-            fontSelect.innerHTML = '';
-            for (let fontName in availableFonts) {
-                let option = document.createElement('option');
-                option.value = fontName;
-                const fontData = availableFonts[fontName];
-                option.text = `${fontName} (${fontData.author}, ${fontData.year})`;
-                option.title = `${fontData.author}, ${fontData.year}`;
-                fontSelect.appendChild(option);
-            }
-            
-            // Trigger initial selection
-            if (fontSelect.options.length > 0) {
-                fontSelect.selectedIndex = 0;
-                fontSelect.dispatchEvent(new Event('change'));
+                showToast("Error updating settings", 'error');
             }
         }
 
@@ -1123,33 +2246,65 @@
             // Update sliders
             document.getElementById('densitySlider').value = config.targetGlyphCount;
             document.getElementById('radiusSlider').value = config.interactionRadius;
-            document.getElementById('maxScaleSlider').value = config.maxScale;
+            document.getElementById('scaleSlider').value = config.maxScale;
+            document.getElementById('spacingSlider').value = config.spacingFactor;
             document.getElementById('idleSlider').value = config.idleStrength;
+            document.getElementById('strengthSlider').value = config.effectStrength;
+            document.getElementById('alignSlider').value = config.alignment;
             
             // Update checkboxes
             document.getElementById('inverseToggle').checked = config.inverseMode;
             document.getElementById('darkToggle').checked = config.darkMode;
-            document.getElementById('rippleToggle').checked = config.rippleEffect;
+            document.getElementById('freezeToggle').checked = config.freezeMode;
+            document.getElementById('glitchToggle').checked = config.glitchEffect;
+            
+            // Update mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === config.interactionMode);
+            });
+            
+            document.querySelectorAll('.quality-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.quality === config.qualityMode);
+            });
             
             // Update displays
             document.getElementById('densityValue').textContent = `${config.targetGlyphCount} glyphs`;
             document.getElementById('radiusValue').textContent = `${config.interactionRadius}px`;
-            document.getElementById('maxScaleValue').textContent = `${config.maxScale.toFixed(1)}x`;
+            document.getElementById('scaleValue').textContent = `${config.maxScale.toFixed(1)}x`;
+            document.getElementById('strengthValue').textContent = 
+                config.effectStrength === 1.0 ? 'Normal' : 
+                config.effectStrength < 1.0 ? 'Low' : 'High';
+            document.getElementById('idleValue').textContent = 
+                config.idleStrength === 0 ? 'None' :
+                config.idleStrength < 0.3 ? 'Mild' : 'Strong';
+            document.getElementById('spacingValue').textContent = 
+                config.spacingFactor === 1.0 ? 'Normal' : 
+                config.spacingFactor > 1.0 ? 'Wide' : 'Tight';
+            document.getElementById('alignValue').textContent = 
+                config.alignment === 0 ? 'Left' : config.alignment === 2 ? 'Right' : 'Center';
             
-            // Phase 2: Idle value display
-            const idleValue = config.idleStrength === 0 ? 'None' :
-                            config.idleStrength < 0.3 ? 'Mild' : 'Strong';
-            document.getElementById('idleValue').textContent = idleValue;
-            
-            // Phase 1: Apply dark mode
+            // Apply dark mode
             document.body.classList.toggle('dark-mode', config.darkMode);
+            document.body.classList.toggle('frozen-mode', config.freezeMode);
+            
+            // Update font selection
+            if (document.getElementById('fontSelect').value !== config.lastFontName) {
+                document.getElementById('fontSelect').value = config.lastFontName;
+                updateStyleDropdown();
+            }
+            
+            document.getElementById('styleSelect').value = config.lastStyleIndex;
         }
 
         function updateDensitySliderMax() {
             if (!p5Instance) return;
             let p = p5Instance;
             let densitySlider = document.getElementById('densitySlider');
-            let limit = (p.width < 800) ? config.mobileMaxGlyphs : 2500;
+            
+            let limit = (p.width < 800) ? config.mobileMaxGlyphs : 
+                       config.qualityMode === 'high' ? 3000 :
+                       config.qualityMode === 'medium' ? 1500 : 800;
+            
             densitySlider.max = limit;
             
             if (config.targetGlyphCount > limit) {
@@ -1165,300 +2320,696 @@
             });
             
             document.getElementById('customInput').value = '';
-            document.getElementById('feedbackInput').value = '';
             updateUIFromConfig();
             updateSettings();
             
-            showToast("All settings reset", 'success');
+            showToast("All settings reset to defaults", 'success');
             
             // Track reset
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'reset_all', {
+                gtag('event', 'reset_all_v3', {
                     'event_category': 'actions',
                     'event_label': 'full_reset'
                 });
             }
         }
 
-        // Phase 3: Share functionality
-        function shareOnTwitter() {
+        // --- EXPORT FUNCTIONS v3.0 ---
+        function exportPNG() {
             let canvas = document.querySelector('canvas');
             if (!canvas) {
-                showToast("Please create something first", 'warning');
+                showToast("No canvas found", 'error');
                 return;
             }
             
-            // Export first
+            // Create a temporary canvas for watermark
+            const tempCanvas = document.createElement('canvas');
+            const ctx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            // Copy original canvas
+            ctx.drawImage(canvas, 0, 0);
+            
+            // Add watermark
+            ctx.font = '12px Helvetica Neue';
+            ctx.fillStyle = config.darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText('Typo Umprum Studio Hub v3.0', canvas.width - 20, canvas.height - 20);
+            ctx.fillText(new Date().toLocaleDateString(), canvas.width - 20, canvas.height - 5);
+            
+            // Create download link
             let link = document.createElement('a');
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             link.download = `typo-umprum-${timestamp}.png`;
-            link.href = canvas.toDataURL('image/png', 1.0);
+            link.href = tempCanvas.toDataURL('image/png', 1.0);
             link.click();
             
-            // Open Twitter with pre-filled text
-            setTimeout(() => {
-                const tweetText = encodeURIComponent("Check out my typography creation with Typo Umprum v2.0! #TypoUmprum #Typography");
-                const url = encodeURIComponent('https://typoumprum.cz/play');
-                window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${url}`, '_blank');
-                
-                showToast("Exported! Now attach the PNG to your tweet", 'info');
-                
-                // Track share
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'share_twitter', {
-                        'event_category': 'social',
-                        'event_label': 'tweet_intent'
-                    });
-                }
-            }, 500);
+            showToast("PNG exported with watermark", 'success');
+            
+            // Track export
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'export_png_v3', {
+                    'event_category': 'export',
+                    'event_label': 'png',
+                    'value': canvas.width * canvas.height
+                });
+            }
         }
 
-        // Phase 5: Send feedback
-        function sendFeedback() {
-            const feedbackInput = document.getElementById('feedbackInput');
-            const feedback = feedbackInput.value.trim();
-            
-            if (!feedback) {
-                showToast("Please enter some feedback first", 'warning');
+        function exportPDF() {
+            let canvas = document.querySelector('canvas');
+            if (!canvas) {
+                showToast("No canvas found", 'error');
                 return;
             }
             
-            if (feedback.length < 10) {
-                showToast("Feedback too short", 'warning');
+            if (typeof window.jspdf === 'undefined') {
+                showToast("PDF export requires jsPDF library", 'error');
                 return;
             }
             
-            const subject = encodeURIComponent("Typo Umprum Playground v2.0 Feedback");
-            const body = encodeURIComponent(`Feedback: ${feedback}\n\nPage: ${window.location.href}\nUser Agent: ${navigator.userAgent}`);
-            window.location.href = `mailto:info@typoumprum.cz?subject=${subject}&body=${body}`;
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            });
+            
+            // Add canvas image
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+            
+            // Add watermark text
+            pdf.setFontSize(10);
+            pdf.setTextColor(128);
+            pdf.text('Typo Umprum Studio Hub v3.0', canvas.width - 100, canvas.height - 30);
+            pdf.text(new Date().toLocaleDateString(), canvas.width - 100, canvas.height - 15);
+            
+            // Save PDF
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            pdf.save(`typo-umprum-${timestamp}.pdf`);
+            
+            showToast("PDF exported successfully", 'success');
+            
+            // Track export
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'export_pdf_v3', {
+                    'event_category': 'export',
+                    'event_label': 'pdf'
+                });
+            }
+        }
+
+        function exportSVG() {
+            showToast("SVG export coming in next update", 'info');
+            
+            // Track feature interest
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'export_svg_interest', {
+                    'event_category': 'export',
+                    'event_label': 'svg_request'
+                });
+            }
+        }
+
+        // --- SHARE FUNCTIONALITY v3.0 ---
+        function openShareModal() {
+            updateShareURL();
+            document.getElementById('share-modal').classList.add('active');
+            
+            // Track modal open
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'share_modal_open', {
+                    'event_category': 'social',
+                    'event_label': 'modal'
+                });
+            }
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.remove('active');
+        }
+
+        function copyURL() {
+            const urlInput = document.getElementById('share-url');
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(urlInput.value).then(() => {
+                showToast("URL copied to clipboard!", 'success');
+                
+                // Track copy
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'url_copy', {
+                        'event_category': 'social',
+                        'event_label': 'clipboard'
+                    });
+                }
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showToast("Failed to copy", 'error');
+            });
+        }
+
+        function shareOnTwitter() {
+            const url = document.getElementById('share-url').value;
+            const text = encodeURIComponent(`Check out my typography creation with Typo Umprum Studio Hub v3.0! #TypoUmprum #Typography #Design`);
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`;
+            window.open(twitterUrl, '_blank');
+            closeShareModal();
+            
+            // Export PNG first as reminder
+            setTimeout(() => {
+                showToast("Don't forget to attach your exported PNG to the tweet!", 'info', 3000);
+            }, 500);
+            
+            // Track share
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'share_twitter_v3', {
+                    'event_category': 'social',
+                    'event_label': 'twitter'
+                });
+            }
+        }
+
+        // --- FEEDBACK SYSTEM v3.0 ---
+        function openFeedbackModal() {
+            document.getElementById('feedback-modal').classList.add('active');
+            
+            // Reset rating
+            document.querySelectorAll('.rating-star').forEach(star => {
+                star.classList.remove('active');
+            });
+            document.getElementById('feedback-rating').value = '0';
+            document.getElementById('feedback-text').value = '';
+            document.getElementById('feedback-email').value = '';
+            document.getElementById('feedback-allow-contact').checked = false;
+            
+            // Track feedback open
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'feedback_modal_open', {
+                    'event_category': 'feedback',
+                    'event_label': 'modal'
+                });
+            }
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').classList.remove('active');
+        }
+
+        function submitFeedback() {
+            const rating = document.getElementById('feedback-rating').value;
+            const text = document.getElementById('feedback-text').value.trim();
+            const email = document.getElementById('feedback-email').value.trim();
+            const allowContact = document.getElementById('feedback-allow-contact').checked;
+            
+            if (!rating || rating === '0') {
+                showToast("Please provide a rating", 'warning');
+                return;
+            }
+            
+            if (text.length < 10) {
+                showToast("Please provide more detailed feedback", 'warning');
+                return;
+            }
+            
+            // Create mailto link
+            let subject = `Typo Umprum v3.0 Feedback (${rating}/5 stars)`;
+            let body = `Rating: ${rating}/5 stars\n\n`;
+            body += `Feedback: ${text}\n\n`;
+            body += `Page: ${window.location.href}\n`;
+            body += `User Agent: ${navigator.userAgent}\n`;
+            body += `Screen: ${window.screen.width}x${window.screen.height}\n`;
+            if (email) body += `Email: ${email}\n`;
+            if (allowContact) body += `Contact allowed: Yes\n`;
+            body += `\n---\nConfig: ${JSON.stringify(config, null, 2)}`;
+            
+            window.location.href = `mailto:info@typoumprum.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             
             showToast("Thank you for your feedback!", 'success');
-            feedbackInput.value = '';
+            closeFeedbackModal();
             
             // Track feedback
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'feedback_sent', {
-                    'event_category': 'engagement',
+                gtag('event', 'feedback_submitted', {
+                    'event_category': 'feedback',
                     'event_label': 'email',
-                    'value': feedback.length
+                    'value': parseInt(rating)
                 });
             }
         }
 
-        // --- UI EVENT LISTENERS ---
-        document.addEventListener("DOMContentLoaded", () => {
-            // Get UI elements
-            const elements = {
-                fontSelect: document.getElementById('fontSelect'),
-                styleSelect: document.getElementById('styleSelect'),
-                customInput: document.getElementById('customInput'),
-                applyTextBtn: document.getElementById('applyTextBtn'),
-                resetTextBtn: document.getElementById('resetTextBtn'),
-                resetBtn: document.getElementById('resetBtn'),
-                saveBtn: document.getElementById('saveBtn'),
-                shareBtn: document.getElementById('shareBtn'),
-                densitySlider: document.getElementById('densitySlider'),
-                radiusSlider: document.getElementById('radiusSlider'),
-                maxScaleSlider: document.getElementById('maxScaleSlider'),
-                idleSlider: document.getElementById('idleSlider'),
-                inverseToggle: document.getElementById('inverseToggle'),
-                darkToggle: document.getElementById('darkToggle'),
-                rippleToggle: document.getElementById('rippleToggle'),
-                mobileToggle: document.getElementById('mobile-toggle-btn'),
-                toolsPanel: document.getElementById('tools-panel'),
-                densityValue: document.getElementById('densityValue'),
-                radiusValue: document.getElementById('radiusValue'),
-                maxScaleValue: document.getElementById('maxScaleValue'),
-                idleValue: document.getElementById('idleValue'),
-                feedbackInput: document.getElementById('feedbackInput'),
-                sendFeedback: document.getElementById('sendFeedback')
-            };
-
-            // Mobile panel toggle
-            elements.mobileToggle.addEventListener('click', () => {
-                const isOpening = elements.toolsPanel.style.display !== 'flex';
-                elements.toolsPanel.style.display = isOpening ? 'flex' : 'none';
-                document.body.style.overflow = isOpening ? 'hidden' : 'visible';
-                
-                elements.mobileToggle.textContent = isOpening ? '✕' : '⚙️';
-                elements.mobileToggle.setAttribute('aria-label', 
-                    isOpening ? 'Close tools panel' : 'Open tools panel');
-                    
-                // Track panel toggle
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'panel_toggle', {
-                        'event_category': 'ui',
-                        'event_label': isOpening ? 'open' : 'close'
-                    });
-                }
-            });
-
-            // Close panel on outside click (mobile)
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 800 && 
-                    elements.toolsPanel.style.display === 'flex' &&
-                    !elements.toolsPanel.contains(e.target) && 
-                    e.target !== elements.mobileToggle) {
-                    elements.toolsPanel.style.display = 'none';
-                    document.body.style.overflow = 'visible';
-                    elements.mobileToggle.textContent = '⚙️';
-                }
-            });
-
-            // Font change
-            elements.fontSelect.addEventListener('change', function() {
-                let fontName = this.value;
-                let fontData = availableFonts[fontName];
-                
-                // Update styles
-                elements.styleSelect.innerHTML = '';
-                fontData.styles.forEach((style, index) => {
-                    let option = document.createElement('option');
-                    option.value = index;
-                    option.text = style;
-                    elements.styleSelect.appendChild(option);
+        // --- GALLERY FUNCTIONS v3.0 ---
+        function openGalleryModal() {
+            renderGallery();
+            document.getElementById('gallery-modal').classList.add('active');
+            
+            // Track gallery open
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'gallery_modal_open', {
+                    'event_category': 'content',
+                    'event_label': 'modal'
                 });
-                
-                // Update placeholder
-                const sample = fontData.sampleText.length > 30 
-                    ? fontData.sampleText.substring(0, 30) + "..." 
-                    : fontData.sampleText;
-                elements.customInput.placeholder = sample;
-                
-                updateSettings();
-            });
+            }
+        }
 
-            // Style change
-            elements.styleSelect.addEventListener('change', updateSettings);
+        function closeGalleryModal() {
+            document.getElementById('gallery-modal').classList.remove('active');
+        }
 
-            // Text controls
-            elements.applyTextBtn.addEventListener('click', updateSettings);
-            elements.customInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') updateSettings();
+        function loadSelectedGalleryItem() {
+            const selected = document.querySelector('.gallery-item.selected');
+            if (!selected) {
+                showToast("Please select an item first", 'warning');
+                return;
+            }
+            
+            const id = parseInt(selected.dataset.id);
+            loadFromGallery(id);
+            closeGalleryModal();
+        }
+
+        function deleteSelectedGalleryItem() {
+            const selected = document.querySelector('.gallery-item.selected');
+            if (!selected) {
+                showToast("Please select an item to delete", 'warning');
+                return;
+            }
+            
+            const id = parseInt(selected.dataset.id);
+            gallery = gallery.filter(item => item.id !== id);
+            localStorage.setItem('typoUmprumGallery', JSON.stringify(gallery));
+            renderGallery();
+            
+            showToast("Item deleted from gallery", 'success');
+            
+            // Track deletion
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'gallery_delete', {
+                    'event_category': 'content',
+                    'event_label': 'item'
+                });
+            }
+        }
+
+        function closeAllModals() {
+            closeShareModal();
+            closeGalleryModal();
+            closeFeedbackModal();
+        }
+
+        // --- UI EVENT LISTENERS v3.0 ---
+        document.addEventListener("DOMContentLoaded", () => {
+            // Get all UI elements
+            const elements = {};
+            const elementIds = [
+                'fontSelect', 'styleSelect', 'customInput', 'applyTextBtn', 'resetTextBtn',
+                'resetBtn', 'saveBtn', 'shareBtn', 'densitySlider', 'radiusSlider', 'scaleSlider',
+                'spacingSlider', 'idleSlider', 'strengthSlider', 'alignSlider', 'inverseToggle',
+                'darkToggle', 'freezeToggle', 'glitchToggle', 'mobileToggle', 'toolsPanel',
+                'densityValue', 'radiusValue', 'scaleValue', 'spacingValue', 'idleValue',
+                'strengthValue', 'alignValue', 'featured-btn', 'randomize-btn', 'mix-fonts-btn',
+                'preset-minimal', 'preset-chaotic', 'preset-organic', 'sample-text-btn',
+                'open-gallery-btn', 'open-feedback-btn', 'toggle-quality-btn', 'shortcuts-btn',
+                'copy-url-btn', 'tweet-btn', 'export-pdf-btn', 'export-svg-btn', 'save-gallery-btn',
+                'close-share-btn', 'load-gallery-btn', 'delete-gallery-btn', 'close-gallery-btn',
+                'submit-feedback-btn', 'close-feedback-btn', 'view-font-site', 'save-preset-btn',
+                'load-preset-btn', 'print-btn'
+            ];
+            
+            elementIds.forEach(id => {
+                elements[id] = document.getElementById(id);
             });
             
-            elements.resetTextBtn.addEventListener('click', () => {
-                elements.customInput.value = '';
-                updateSettings();
-                showToast("Text reset to sample", 'info');
-            });
-            
-            elements.resetBtn.addEventListener('click', resetAll);
-            
-            // Export
-            elements.saveBtn.addEventListener('click', () => {
-                let canvas = document.querySelector('canvas');
-                if (canvas) {
-                    let link = document.createElement('a');
-                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                    link.download = `typo-umprum-${timestamp}.png`;
-                    link.href = canvas.toDataURL('image/png', 1.0);
-                    link.click();
-                    showToast("Image exported successfully!", 'success');
+            // Mobile panel toggle
+            if (elements.mobileToggle && elements.toolsPanel) {
+                elements.mobileToggle.addEventListener('click', () => {
+                    const isOpening = elements.toolsPanel.style.display !== 'flex';
+                    elements.toolsPanel.style.display = isOpening ? 'flex' : 'none';
+                    document.body.style.overflow = isOpening ? 'hidden' : 'visible';
                     
-                    // Track export
+                    elements.mobileToggle.textContent = isOpening ? '✕' : '⚙️';
+                    elements.mobileToggle.setAttribute('aria-label', 
+                        isOpening ? 'Close tools panel' : 'Open tools panel');
+                    
+                    // Track panel toggle
                     if (typeof gtag !== 'undefined') {
-                        gtag('event', 'export_image', {
-                            'event_category': 'actions',
-                            'event_label': 'png',
-                            'value': canvas.width * canvas.height
+                        gtag('event', 'panel_toggle_v3', {
+                            'event_category': 'ui',
+                            'event_label': isOpening ? 'open' : 'close'
                         });
                     }
-                }
-            });
-            
-            // Phase 3: Share
-            elements.shareBtn.addEventListener('click', shareOnTwitter);
-            
-            // Sliders
-            elements.densitySlider.addEventListener('input', function() {
-                config.targetGlyphCount = parseInt(this.value);
-                elements.densityValue.textContent = `${this.value} glyphs`;
-                generateGrid();
-            });
-            
-            elements.radiusSlider.addEventListener('input', function() {
-                config.interactionRadius = parseInt(this.value);
-                elements.radiusValue.textContent = `${this.value}px`;
-            });
-            
-            elements.maxScaleSlider.addEventListener('input', function() {
-                config.maxScale = parseFloat(this.value);
-                elements.maxScaleValue.textContent = `${this.value}x`;
-            });
-            
-            elements.idleSlider.addEventListener('input', function() {
-                config.idleStrength = parseFloat(this.value);
-                const idleValue = config.idleStrength === 0 ? 'None' :
-                                config.idleStrength < 0.3 ? 'Mild' : 'Strong';
-                elements.idleValue.textContent = idleValue;
-            });
-
-            // Phase 1: Dark mode toggle
-            elements.darkToggle.addEventListener('change', function() {
-                config.darkMode = this.checked;
-                document.body.classList.toggle('dark-mode', config.darkMode);
+                });
                 
-                // Track dark mode toggle
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'dark_mode_toggle', {
-                        'event_category': 'ui',
-                        'event_label': config.darkMode ? 'enabled' : 'disabled'
-                    });
-                }
-            });
-
-            // Phase 1: Inverse mode toggle
-            elements.inverseToggle.addEventListener('change', function() {
-                config.inverseMode = this.checked;
-            });
-
-            // Phase 2: Ripple effect toggle
-            elements.rippleToggle.addEventListener('change', function() {
-                config.rippleEffect = this.checked;
-                lowFPSWarningShown = false; // Reset warning
-                
-                // Track ripple toggle
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'ripple_toggle', {
-                        'event_category': 'effects',
-                        'event_label': config.rippleEffect ? 'enabled' : 'disabled'
-                    });
-                }
-            });
-
-            // Phase 5: Send feedback
-            elements.sendFeedback.addEventListener('click', sendFeedback);
-            elements.feedbackInput.addEventListener('keypress', (e) => {
-                if (e.ctrlKey && e.key === 'Enter') {
-                    sendFeedback();
-                }
-            });
-
-            // Initialize UI
-            populateFontSelect();
-            
-            // Initial slider displays
-            if (elements.densitySlider) {
-                elements.densityValue.textContent = `${elements.densitySlider.value} glyphs`;
-                elements.radiusValue.textContent = `${elements.radiusSlider.value}px`;
-                elements.maxScaleValue.textContent = `${elements.maxScaleSlider.value}x`;
-                
-                const idleVal = parseFloat(elements.idleSlider.value);
-                const idleText = idleVal === 0 ? 'None' : idleVal < 0.3 ? 'Mild' : 'Strong';
-                elements.idleValue.textContent = idleText;
-            }
-            
-            // Update max density
-            setTimeout(updateDensitySliderMax, 200);
-            
-            // Track page view
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'page_view', {
-                    'event_category': 'engagement',
-                    'event_label': 'v2.0_loaded'
+                // Close panel on outside click (mobile)
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 800 && 
+                        elements.toolsPanel.style.display === 'flex' &&
+                        !elements.toolsPanel.contains(e.target) && 
+                        e.target !== elements.mobileToggle) {
+                        elements.toolsPanel.style.display = 'none';
+                        document.body.style.overflow = 'visible';
+                        elements.mobileToggle.textContent = '⚙️';
+                    }
                 });
             }
+            
+            // Font selection
+            if (elements.fontSelect) {
+                elements.fontSelect.addEventListener('change', function() {
+                    config.lastFontName = this.value;
+                    updateStyleDropdown();
+                    updateFontSiteLink();
+                    updateSettings();
+                });
+            }
+            
+            if (elements.styleSelect) {
+                elements.styleSelect.addEventListener('change', () => {
+                    config.lastStyleIndex = parseInt(elements.styleSelect.value);
+                    updateSettings();
+                });
+            }
+            
+            // Text controls
+            if (elements.applyTextBtn) {
+                elements.applyTextBtn.addEventListener('click', updateSettings);
+            }
+            
+            if (elements.customInput) {
+                elements.customInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        updateSettings();
+                    }
+                });
+                
+                elements.customInput.addEventListener('input', function() {
+                    const count = this.value.length;
+                    elements.charCount.textContent = `${count} chars`;
+                });
+            }
+            
+            if (elements.resetTextBtn) {
+                elements.resetTextBtn.addEventListener('click', () => {
+                    elements.customInput.value = '';
+                    updateSettings();
+                    showToast("Text reset to sample", 'info');
+                });
+            }
+            
+            if (elements.sampleTextBtn) {
+                elements.sampleTextBtn.addEventListener('click', () => {
+                    const fontData = availableFonts[config.lastFontName];
+                    if (fontData) {
+                        elements.customInput.value = fontData.sampleText;
+                        updateSettings();
+                    }
+                });
+            }
+            
+            // Reset all
+            if (elements.resetBtn) {
+                elements.resetBtn.addEventListener('click', resetAll);
+            }
+            
+            // Export buttons
+            if (elements.saveBtn) {
+                elements.saveBtn.addEventListener('click', exportPNG);
+            }
+            
+            // Share modal
+            if (elements.shareBtn) {
+                elements.shareBtn.addEventListener('click', openShareModal);
+            }
+            
+            if (elements.copyUrlBtn) {
+                elements.copyUrlBtn.addEventListener('click', copyURL);
+            }
+            
+            if (elements.tweetBtn) {
+                elements.tweetBtn.addEventListener('click', shareOnTwitter);
+            }
+            
+            if (elements.exportPdfBtn) {
+                elements.exportPdfBtn.addEventListener('click', exportPDF);
+            }
+            
+            if (elements.exportSvgBtn) {
+                elements.exportSvgBtn.addEventListener('click', exportSVG);
+            }
+            
+            if (elements.saveGalleryBtn) {
+                elements.saveGalleryBtn.addEventListener('click', saveToGallery);
+            }
+            
+            if (elements.closeShareBtn) {
+                elements.closeShareBtn.addEventListener('click', closeShareModal);
+            }
+            
+            // Gallery modal
+            if (elements.openGalleryBtn) {
+                elements.openGalleryBtn.addEventListener('click', openGalleryModal);
+            }
+            
+            if (elements.loadGalleryBtn) {
+                elements.loadGalleryBtn.addEventListener('click', loadSelectedGalleryItem);
+            }
+            
+            if (elements.deleteGalleryBtn) {
+                elements.deleteGalleryBtn.addEventListener('click', deleteSelectedGalleryItem);
+            }
+            
+            if (elements.closeGalleryBtn) {
+                elements.closeGalleryBtn.addEventListener('click', closeGalleryModal);
+            }
+            
+            // Feedback modal
+            if (elements.openFeedbackBtn) {
+                elements.openFeedbackBtn.addEventListener('click', openFeedbackModal);
+            }
+            
+            if (elements.submitFeedbackBtn) {
+                elements.submitFeedbackBtn.addEventListener('click', submitFeedback);
+            }
+            
+            if (elements.closeFeedbackBtn) {
+                elements.closeFeedbackBtn.addEventListener('click', closeFeedbackModal);
+            }
+            
+            // Rating stars
+            document.querySelectorAll('.rating-star').forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = parseInt(this.dataset.value);
+                    document.getElementById('feedback-rating').value = value;
+                    
+                    // Update star display
+                    document.querySelectorAll('.rating-star').forEach(s => {
+                        s.classList.toggle('active', parseInt(s.dataset.value) <= value);
+                    });
+                });
+            });
+            
+            // Sliders with live updates
+            const sliders = [
+                { id: 'densitySlider', value: 'densityValue', format: v => `${v} glyphs` },
+                { id: 'radiusSlider', value: 'radiusValue', format: v => `${v}px` },
+                { id: 'scaleSlider', value: 'scaleValue', format: v => `${parseFloat(v).toFixed(1)}x` },
+                { id: 'spacingSlider', value: 'spacingValue', format: v => 
+                    v === '1.0' ? 'Normal' : parseFloat(v) > 1.0 ? 'Wide' : 'Tight' },
+                { id: 'idleSlider', value: 'idleValue', format: v => 
+                    v === '0' ? 'None' : parseFloat(v) < 0.3 ? 'Mild' : 'Strong' },
+                { id: 'strengthSlider', value: 'strengthValue', format: v => 
+                    v === '1.0' ? 'Normal' : parseFloat(v) < 1.0 ? 'Low' : 'High' },
+                { id: 'alignSlider', value: 'alignValue', format: v => 
+                    v === '0' ? 'Left' : v === '2' ? 'Right' : 'Center' }
+            ];
+            
+            sliders.forEach(slider => {
+                const element = document.getElementById(slider.id);
+                const valueElement = document.getElementById(slider.value);
+                
+                if (element && valueElement) {
+                    element.addEventListener('input', function() {
+                        const value = this.value;
+                        valueElement.textContent = slider.format(value);
+                        
+                        // Update config
+                        const configKey = slider.id.replace('Slider', '');
+                        if (configKey === 'density') {
+                            config.targetGlyphCount = parseInt(value);
+                            generateGrid();
+                        } else if (configKey === 'radius') {
+                            config.interactionRadius = parseInt(value);
+                        } else if (configKey === 'scale') {
+                            config.maxScale = parseFloat(value);
+                        } else if (configKey === 'spacing') {
+                            config.spacingFactor = parseFloat(value);
+                            generateGrid();
+                        } else if (configKey === 'idle') {
+                            config.idleStrength = parseFloat(value);
+                        } else if (configKey === 'strength') {
+                            config.effectStrength = parseFloat(value);
+                        } else if (configKey === 'align') {
+                            config.alignment = parseInt(value);
+                            generateGrid();
+                        }
+                    });
+                }
+            });
+            
+            // Mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    config.interactionMode = this.dataset.mode;
+                    
+                    // Update UI
+                    document.querySelectorAll('.mode-btn').forEach(b => {
+                        b.classList.toggle('active', b === this);
+                    });
+                    
+                    // Special handling for ink mode
+                    if (config.interactionMode === 'ink') {
+                        config.inverseMode = true;
+                        elements.inverseToggle.checked = true;
+                    }
+                    
+                    showToast(`${this.dataset.mode} mode activated`, 'info');
+                    
+                    // Track mode change
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'mode_change', {
+                            'event_category': 'interaction',
+                            'event_label': this.dataset.mode
+                        });
+                    }
+                });
+            });
+            
+            // Quality buttons
+            document.querySelectorAll('.quality-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setQualityMode(this.dataset.quality);
+                    
+                    // Track quality change
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'quality_change', {
+                            'event_category': 'performance',
+                            'event_label': this.dataset.quality
+                        });
+                    }
+                });
+            });
+            
+            // Checkbox toggles
+            if (elements.inverseToggle) {
+                elements.inverseToggle.addEventListener('change', function() {
+                    config.inverseMode = this.checked;
+                });
+            }
+            
+            if (elements.darkToggle) {
+                elements.darkToggle.addEventListener('change', toggleDarkMode);
+            }
+            
+            if (elements.freezeToggle) {
+                elements.freezeToggle.addEventListener('change', toggleFreeze);
+            }
+            
+            if (elements.glitchToggle) {
+                elements.glitchToggle.addEventListener('change', function() {
+                    config.glitchEffect = this.checked;
+                    
+                    // Track glitch toggle
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'glitch_toggle', {
+                            'event_category': 'effects',
+                            'event_label': this.checked ? 'enabled' : 'disabled'
+                        });
+                    }
+                });
+            }
+            
+            // Featured and preset buttons
+            if (elements.featuredBtn) {
+                elements.featuredBtn.addEventListener('click', () => {
+                    // Load newest font
+                    const sortedFonts = Object.keys(availableFonts).sort((a, b) => {
+                        return availableFonts[b].year - availableFonts[a].year;
+                    });
+                    
+                    const newestFont = sortedFonts[0];
+                    if (newestFont) {
+                        config.lastFontName = newestFont;
+                        elements.fontSelect.value = newestFont;
+                        elements.fontSelect.dispatchEvent(new Event('change'));
+                        
+                        showToast(`Featured: ${newestFont} (${availableFonts[newestFont].year})`, 'success');
+                        
+                        // Track featured load
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'featured_load', {
+                                'event_category': 'fonts',
+                                'event_label': newestFont
+                            });
+                        }
+                    }
+                });
+            }
+            
+            if (elements.randomizeBtn) {
+                elements.randomizeBtn.addEventListener('click', randomizeConfig);
+            }
+            
+            if (elements.mixFontsBtn) {
+                elements.mixFontsBtn.addEventListener('click', mixFonts);
+            }
+            
+            ['minimal', 'chaotic', 'organic'].forEach(preset => {
+                const btn = elements[`preset-${preset}`];
+                if (btn) {
+                    btn.addEventListener('click', () => applyPreset(preset));
+                }
+            });
+            
+            // Shortcuts button
+            if (elements.shortcutsBtn) {
+                elements.shortcutsBtn.addEventListener('click', showShortcutsHelp);
+            }
+            
+            // Print setup
+            if (elements.printBtn) {
+                elements.printBtn.addEventListener('click', () => {
+                    applyPreset('print');
+                    showToast("Print preset applied - ready for export", 'info');
+                });
+            }
+            
+            // Initialize UI displays
+            setTimeout(() => {
+                if (elements.densityValue) {
+                    sliders.forEach(slider => {
+                        const element = document.getElementById(slider.id);
+                        const valueElement = document.getElementById(slider.value);
+                        if (element && valueElement) {
+                            valueElement.textContent = slider.format(element.value);
+                        }
+                    });
+                }
+                
+                // Update max density
+                updateDensitySliderMax();
+                
+                // Track v3.0 launch
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'v3_0_launch', {
+                        'event_category': 'version',
+                        'event_label': 'launch'
+                    });
+                }
+            }, 500);
         });
 
         // Error handling
@@ -1468,7 +3019,7 @@
             
             // Track error
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'error', {
+                gtag('event', 'error_v3', {
                     'event_category': 'system',
                     'event_label': e.error.message,
                     'value': 1
