@@ -1,0 +1,30 @@
+{
+    "Ananas": {
+        "sampleText": "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest...",
+        "styles": ["Regular", "Italic"],
+        "cssFamilies": ["AnanasRegular", "AnanasItalic"],
+        "author": "Jaromír Květoň",
+        "year": 2025
+    },
+    "Chlebiczech": {
+        "sampleText": "Jeho jméno jsem zapomněl, prý provádí nárazové obchody s neřestmi...",
+        "styles": ["Regular"],
+        "cssFamilies": ["ChlebiczechRegular"],
+        "author": "Žofia Kosová",
+        "year": 2025
+    },
+    "Korchma": {
+        "sampleText": "Вона імітує запальний погляд, тріумфально оживаючи у темряві...",
+        "styles": ["Regular", "Italic"],
+        "cssFamilies": ["KorchmaRegular", "KorchmaItalic"],
+        "author": "Anna Sherlupenkova",
+        "year": 2025
+    },
+    "März Grotesk": {
+        "sampleText": "During the Thirty Years' War, the Swedes wanted to use it as a weapon...",
+        "styles": ["Bold"],
+        "cssFamilies": ["MarzGroteskBold"],
+        "author": "Šimon Vlasák",
+        "year": 2025
+    }
+}
