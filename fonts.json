@@ -26,5 +26,26 @@
         "cssFamilies": ["MarzGroteskBold"],
         "author": "Šimon Vlasák",
         "year": 2025
+    },
+    "Walbert": {
+        "sampleText": "The quick brown fox jumps over the lazy dog, exploring typographic frontiers...",
+        "styles": ["Regular"],
+        "cssFamilies": ["WalbertRegular"],
+        "author": "Pavla Nečásková",
+        "year": 2026
+    },
+    "Basteleur": {
+        "sampleText": "Typography is the craft of endowing human language with durable visual form...",
+        "styles": ["Regular", "Bold"],
+        "cssFamilies": ["BasteleurRegular", "BasteleurBold"],
+        "author": "Studio UMPRUM",
+        "year": 2024
+    },
+    "Garamond UMPRUM": {
+        "sampleText": "Classic elegance meets contemporary Czech design philosophy in this revival...",
+        "styles": ["Regular", "Italic"],
+        "cssFamilies": ["GaramondUMPRUMRegular", "GaramondUMPRUMItalic"],
+        "author": "Historical Revival Team",
+        "year": 2023
     }
 }

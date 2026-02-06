@@ -1,4 +1,4 @@
-// ==================== TYPO UMPRUM v3.1 - TRENDY EFFECTS ====================
+// ==================== TYPO UMPRUM v3.1 FINAL - PERLIN WAVES + MODULAR ====================
 
 // --- GLOBAL VARIABLES ---
 let p5Instance;
@@ -9,10 +9,10 @@ let lastFrameTime = performance.now();
 let lowFPSWarningShown = false;
 let keyboardShortcuts = {};
 
-// FONT DATA (will be loaded from fonts.json)
+// FONT DATA (loaded from fonts.json)
 let availableFonts = {};
 
-// v3.1 CONFIGURATION - Minimal & Clean
+// v3.1 FINAL CONFIGURATION
 let config = {
     // Core
     version: '3.1',
@@ -28,7 +28,7 @@ let config = {
     interactionRadius: 280,
     maxScale: 3.5,
     
-    // Trendy Effects (v3.1)
+    // Trendy Effects (v3.1 Final)
     darkMode: false,
     waveEffect: false,
     bloomEffect: false,
@@ -47,6 +47,88 @@ let config = {
 
 // DEFAULT CONFIG
 const defaultConfig = JSON.parse(JSON.stringify(config));
+
+// --- MODULAR EFFECTS FUNCTIONS v3.1 Final ---
+function applyWaveEffect(g, p, d, proximity) {
+    if (!config.waveEffect) return { x: 0, y: 0 };
+    
+    let time = p.frameCount * 0.02;
+    
+    // Base organic Perlin wave (idle motion)
+    let baseWaveY = (p.noise(g.noiseSeedY + time) * 2 - 1) * 30;
+    let baseWaveX = (p.noise(g.noiseSeedX + time * 0.8) * 2 - 1) * 15;
+    
+    // Interactive wave amplification
+    if (d < config.interactionRadius) {
+        let interactiveScale = proximity * 1.5;
+        baseWaveY += (p.noise(g.noiseSeedY * 2 + time * 3 + proximity * 10) * 2 - 1) * 60 * interactiveScale;
+        baseWaveX += (p.noise(g.noiseSeedX * 2 + time * 2.5 + proximity * 8) * 2 - 1) * 30 * interactiveScale;
+    }
+    
+    return { x: baseWaveX, y: baseWaveY };
+}
+
+function applyBloomEffect(p, char, scl, darkMode) {
+    if (!config.bloomEffect) return;
+    
+    p.push();
+    p.scale(scl * 1.3);
+    p.fill(darkMode ? 60 : 190, 80); // Softer glow with opacity
+    p.text(char, 0, 0);
+    p.pop();
+}
+
+function applyScatterEffect(g, p, d, proximity) {
+    if (!config.scatterEffect) {
+        // Reform slowly
+        if (g.scatterAmount && g.scatterAmount > 0.1) {
+            g.scatterAmount *= 0.93;
+            g.scatterAngle = p.lerp(g.scatterAngle || 0, 0, 0.1);
+            return {
+                x: p.cos(g.scatterAngle) * g.scatterAmount,
+                y: p.sin(g.scatterAngle) * g.scatterAmount
+            };
+        }
+        g.scatterAmount = 0;
+        return { x: 0, y: 0 };
+    }
+    
+    // Apply scatter
+    if (d < config.interactionRadius) {
+        g.scatterAmount = p.lerp(g.scatterAmount || 0, proximity * 180, 0.15);
+        g.scatterAngle = p.atan2(g.baseY - config.lastTy, g.baseX - config.lastTx);
+    } else {
+        g.scatterAmount = p.lerp(g.scatterAmount || 0, 0, 0.05);
+    }
+    
+    return {
+        x: p.cos(g.scatterAngle || 0) * (g.scatterAmount || 0),
+        y: p.sin(g.scatterAngle || 0) * (g.scatterAmount || 0)
+    };
+}
+
+function applyIdleRotation(g, p) {
+    if (config.idleStrength <= 0) return 0;
+    
+    // Perlin-based idle rotation
+    let noiseVal = p.noise(
+        g.baseX * 0.005,
+        g.baseY * 0.005,
+        p.frameCount * 0.003
+    );
+    return (noiseVal * 2 - 1) * config.idleStrength * 0.5;
+}
+
+function drawWatermark(p) {
+    if (!p) return;
+    
+    p.push();
+    p.textAlign(p.RIGHT);
+    p.textSize(14);
+    p.fill(config.darkMode ? 100 : 150);
+    p.text("Typo Umprum Playground v3.1", p.width - 20, p.height - 20);
+    p.pop();
+}
 
 // --- UTILITY FUNCTIONS ---
 function showToast(message, type = 'info', duration = 3000) {
@@ -95,17 +177,19 @@ function checkPerformance() {
         if (fps < 30) {
             indicator.classList.add('low');
             
-            // Auto-disable scatter if performance is bad
-            if (config.scatterEffect && !lowFPSWarningShown) {
+            // Auto-disable heavy effects if performance is bad
+            if ((config.scatterEffect || config.waveEffect) && !lowFPSWarningShown) {
                 config.scatterEffect = false;
+                config.waveEffect = false;
                 document.getElementById('scatterToggle').checked = false;
-                showToast("Disabled scatter effect for better performance", 'warning');
+                document.getElementById('waveToggle').checked = false;
+                showToast("Disabled effects for better performance", 'warning');
                 lowFPSWarningShown = true;
                 
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'auto_effect_disable', {
                         'event_category': 'performance',
-                        'event_label': 'scatter',
+                        'event_label': 'scatter_wave',
                         'value': fps
                     });
                 }
@@ -121,11 +205,18 @@ function checkPerformance() {
     return fps;
 }
 
-// --- KEYBOARD SHORTCUTS v3.1 ---
+// --- KEYBOARD SHORTCUTS v3.1 Final ---
 function initKeyboardShortcuts() {
     keyboardShortcuts = {
         '?': () => showShortcutsHelp(),
-        ' ': () => toggleFreeze(), // Space bar toggles freeze
+        ' ': (e) => {
+            // Don't trigger spacebar if focused on text input
+            const activeElement = document.activeElement;
+            if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+                return;
+            }
+            toggleFreeze();
+        },
         'd': () => toggleDarkMode(),
         'r': () => resetAll(),
         's': () => document.getElementById('exportPngBtn').click(),
@@ -142,18 +233,24 @@ function initKeyboardShortcuts() {
     };
     
     document.addEventListener('keydown', (e) => {
-        // Don't trigger in input fields
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        const activeElement = document.activeElement;
+        
+        // Don't trigger in input fields (except Escape)
+        if (activeElement && 
+            (activeElement.tagName === 'INPUT' || 
+             activeElement.tagName === 'TEXTAREA' || 
+             activeElement.tagName === 'SELECT') && 
+            e.key !== 'Escape') {
             return;
         }
         
         const key = e.key.toLowerCase();
         if (keyboardShortcuts[key]) {
             e.preventDefault();
-            keyboardShortcuts[key]();
+            keyboardShortcuts[key](e);
         } else if (keyboardShortcuts[e.key]) {
             e.preventDefault();
-            keyboardShortcuts[e.key]();
+            keyboardShortcuts[e.key](e);
         }
     });
 }
@@ -171,6 +268,7 @@ function showShortcutsHelp() {
         "B = Toggle bloom effect<br>" +
         "C = Toggle scatter effect<br>" +
         "Arrows = Adjust sliders<br>" +
+        "ESC = Close mobile panel<br>" +
         "? = Show this help",
         'info',
         5000
@@ -244,7 +342,7 @@ function closeMobilePanel() {
     }
 }
 
-// --- FONT MANAGEMENT ---
+// --- FONT MANAGEMENT v3.1 Final ---
 function loadFonts() {
     // Try to load from JSON first
     fetch('fonts.json')
@@ -264,7 +362,16 @@ function loadFonts() {
                 config.lastFontName = firstFont;
             }
             
-            showToast("Fonts loaded", 'success');
+            showToast(`Loaded ${Object.keys(data).length} fonts dynamically`, 'success');
+            
+            // Track font load
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'fonts_loaded_dynamic', {
+                    'event_category': 'fonts',
+                    'event_label': 'json',
+                    'value': Object.keys(data).length
+                });
+            }
         })
         .catch(err => {
             console.log('Using default fonts:', err);
@@ -347,9 +454,11 @@ function populateFontSelect() {
     
     fontSelect.innerHTML = '';
     
-    // Sort by year (newest first)
+    // Sort by year (newest first), then alphabetically
     const sortedFonts = Object.keys(availableFonts).sort((a, b) => {
-        return availableFonts[b].year - availableFonts[a].year;
+        const yearDiff = availableFonts[b].year - availableFonts[a].year;
+        if (yearDiff !== 0) return yearDiff;
+        return a.localeCompare(b);
     });
     
     sortedFonts.forEach(fontName => {
@@ -358,15 +467,22 @@ function populateFontSelect() {
         option.value = fontName;
         option.text = `${fontName} (${fontData.author}, ${fontData.year})`;
         option.title = `${fontData.author} · ${fontData.year}`;
+        
+        // Mark as newest (2026) or recent (2025)
+        if (fontData.year >= 2026) {
+            option.text += ' 🆕';
+        } else if (fontData.year === 2025) {
+            option.text += ' ★';
+        }
+        
         fontSelect.appendChild(option);
     });
     
-    // Set initial selection
-    if (sortedFonts.includes(config.lastFontName)) {
-        fontSelect.value = config.lastFontName;
-    } else {
-        fontSelect.selectedIndex = 0;
-        config.lastFontName = fontSelect.value;
+    // Set initial selection to newest font
+    if (sortedFonts.length > 0) {
+        const newestFont = sortedFonts[0];
+        fontSelect.value = newestFont;
+        config.lastFontName = newestFont;
     }
     
     // Update style dropdown
@@ -395,7 +511,7 @@ function updateStyleDropdown() {
     styleSelect.value = config.lastStyleIndex;
 }
 
-// --- P5 SKETCH v3.1 ---
+// --- P5 SKETCH v3.1 Final ---
 function sketch(p) {
     p5Instance = p;
 
@@ -429,13 +545,13 @@ function sketch(p) {
                 generateGrid();
                 
                 const loadTime = performance.now() - loadStart;
-                showToast(`v3.1 ready in ${loadTime.toFixed(0)}ms`, 'success', 2000);
+                showToast(`v3.1 Final ready in ${loadTime.toFixed(0)}ms`, 'success', 2000);
                 
                 // Track page load
                 if (typeof gtag !== 'undefined') {
-                    gtag('event', 'page_load_v3_1', {
+                    gtag('event', 'page_load_v3_1_final', {
                         'event_category': 'engagement',
-                        'event_label': 'v3.1',
+                        'event_label': 'v3.1_final',
                         'value': Math.round(loadTime)
                     });
                 }
@@ -465,6 +581,7 @@ function sketch(p) {
         // Handle pause/freeze mode
         if (config.paused) {
             drawPaused(p);
+            drawWatermark(p); // Add watermark to paused canvas too
             return;
         }
         
@@ -487,18 +604,24 @@ function sketch(p) {
         config.lastTx = tx;
         config.lastTy = ty;
         
-        // Apply trendy effects
-        applyTrendyEffects(p, tx, ty);
-        
-        // Draw all glyphs
+        // Draw all glyphs with modular effects
         drawGlyphs(p, tx, ty);
+        
+        // Add watermark to live canvas
+        drawWatermark(p);
     };
 
     p.keyPressed = function() {
-        if (p.key === ' ') {
+        const activeElement = document.activeElement;
+        
+        // Only process spacebar if not in text input
+        if (p.key === ' ' && 
+            (!activeElement || 
+             (activeElement.tagName !== 'TEXTAREA' && activeElement.tagName !== 'INPUT'))) {
             toggleFreeze();
             return false; // Prevent default space behavior
         }
+        return true;
     };
 
     p.windowResized = function() {
@@ -512,70 +635,11 @@ function sketch(p) {
 // Initialize P5
 new p5(sketch);
 
-// --- TRENDY EFFECTS v3.1 ---
-function applyTrendyEffects(p, tx, ty) {
-    for (let i = 0; i < grid.length; i++) {
-        let g = grid[i];
-        
-        // Calculate distance to cursor
-        let d = p.dist(tx, ty, g.baseX, g.baseY);
-        
-        // Fluid Wave Effect
-        if (config.waveEffect) {
-            let waveOffset = p.sin((g.baseX * 0.01) + p.frameCount * 0.05) * 20;
-            
-            if (d < config.interactionRadius) {
-                let proximity = 1 - (d / config.interactionRadius);
-                waveOffset += p.sin((g.baseY * 0.02) + p.frameCount * 0.1) * proximity * 50;
-            }
-            
-            g.waveY = waveOffset;
-        } else if (g.waveY !== undefined) {
-            // Smoothly return to normal
-            g.waveY *= 0.95;
-            if (Math.abs(g.waveY) < 0.5) g.waveY = undefined;
-        }
-        
-        // Scatter Effect
-        if (config.scatterEffect) {
-            if (d < config.interactionRadius) {
-                let proximity = 1 - (d / config.interactionRadius);
-                g.scatterOffset = proximity * 100;
-                
-                // Calculate scatter direction away from cursor
-                let angle = p.atan2(g.baseY - ty, g.baseX - tx);
-                g.scatterX = p.cos(angle) * g.scatterOffset;
-                g.scatterY = p.sin(angle) * g.scatterOffset;
-            } else if (g.scatterOffset > 0) {
-                // Slowly reform
-                g.scatterOffset *= 0.95;
-                g.scatterX *= 0.95;
-                g.scatterY *= 0.95;
-                
-                if (g.scatterOffset < 0.5) {
-                    g.scatterOffset = 0;
-                    g.scatterX = 0;
-                    g.scatterY = 0;
-                }
-            }
-        }
-        
-        // Update position based on effects
-        g.x = g.baseX + (g.scatterX || 0);
-        g.y = g.baseY + (g.waveY || 0) + (g.scatterY || 0);
-        
-        // Boundary constraints
-        const margin = 50;
-        if (g.x < -margin) g.x = p.width + margin;
-        if (g.x > p.width + margin) g.x = -margin;
-        if (g.y < -margin) g.y = p.height + margin;
-        if (g.y > p.height + margin) g.y = -margin;
-    }
-}
-
 function drawPaused(p) {
     p.background(config.darkMode ? 0 : 255);
     if (!fontLoaded || grid.length === 0) return;
+    
+    p.noStroke();
     
     // Draw paused glyphs at their last positions
     for (let i = 0; i < grid.length; i++) {
@@ -583,7 +647,6 @@ function drawPaused(p) {
         
         p.textFont(config.currentFontFamily);
         p.textSize(config.baseFontSize);
-        p.noStroke();
         p.fill(config.darkMode ? 255 : 0);
         
         p.push();
@@ -601,19 +664,20 @@ function drawGlyphs(p, tx, ty) {
     for (let i = 0; i < grid.length; i++) {
         let g = grid[i];
         
-        // Calculate distance for scale/color
-        let d = p.dist(tx, ty, g.x, g.y);
+        // Calculate distance for effects
+        let d = p.dist(tx, ty, g.baseX, g.baseY);
+        let proximity = 0;
         let scl = 1;
         let rot = 0;
         
         if (d < config.interactionRadius) {
             let normalizedDist = p.map(d, 0, config.interactionRadius, 0, 1);
-            let proximity = 1 - normalizedDist;
+            proximity = 1 - normalizedDist;
             
             // Scale
             scl = 1 + (config.maxScale - 1) * (proximity * proximity);
             
-            // Rotation
+            // Rotation (from proximity + Perlin noise)
             rot = g.angleOffset * proximity * (p.PI / 4);
             
             // Store for pause mode
@@ -621,43 +685,41 @@ function drawGlyphs(p, tx, ty) {
             g.lastRot = rot;
         } else {
             // Gentle idle motion
-            if (config.idleStrength > 0) {
-                rot += (p.noise(g.baseX * 0.01, g.baseY * 0.01, p.frameCount * 0.005) - 0.5) * config.idleStrength;
-                g.lastRot = rot;
-            }
+            rot = applyIdleRotation(g, p);
+            g.lastRot = rot;
             g.lastScl = scl;
         }
+        
+        // Apply modular effects
+        let waveOffset = applyWaveEffect(g, p, d, proximity);
+        let scatterOffset = applyScatterEffect(g, p, d, proximity);
         
         p.textFont(config.currentFontFamily);
         p.textSize(config.baseFontSize);
         
-        // Bloom Glow Effect (draw behind)
-        if (config.bloomEffect && d < config.interactionRadius * 1.5) {
-            let bloomProximity = 1 - p.map(d, 0, config.interactionRadius * 1.5, 0, 1);
-            bloomProximity = p.constrain(bloomProximity, 0, 1);
-            
-            p.push();
-            p.translate(g.x, g.y);
-            p.scale(scl * (1 + bloomProximity * 0.3));
-            p.rotate(rot);
-            p.fill(config.darkMode ? 50 : 200, 100 * bloomProximity);
-            p.text(g.char, 0, 0);
-            p.pop();
-        }
+        // Bloom effect (draw behind)
+        applyBloomEffect(p, g.char, scl, config.darkMode);
         
         // Main glyph
         p.fill(config.darkMode ? 255 : 0);
         
         p.push();
-        p.translate(g.x, g.y);
+        p.translate(
+            g.baseX + waveOffset.x + scatterOffset.x,
+            g.baseY + waveOffset.y + scatterOffset.y
+        );
         p.scale(scl);
         p.rotate(rot);
         p.text(g.char, 0, 0);
         p.pop();
+        
+        // Update position for reference
+        g.x = g.baseX + waveOffset.x + scatterOffset.x;
+        g.y = g.baseY + waveOffset.y + scatterOffset.y;
     }
 }
 
-// --- GRID GENERATION ---
+// --- GRID GENERATION v3.1 Final ---
 function generateGrid() {
     if (!p5Instance || !fontLoaded) return;
     
@@ -721,16 +783,24 @@ function generateGrid() {
                     baseX: x,
                     baseY: y,
                     angleOffset: p.random(-1, 1),
+                    noiseSeedX: p.random(10000), // For Perlin waves
+                    noiseSeedY: p.random(10000),
                     lastScl: 1,
                     lastRot: 0,
-                    charWidth: p.textWidth(char)
+                    charWidth: p.textWidth(char),
+                    scatterAmount: 0,
+                    scatterAngle: 0
                 });
             }
         }
         
+        // Update glyph count display
+        const glyphCount = document.getElementById('glyph-count');
+        if (glyphCount) glyphCount.textContent = `${grid.length} glyphs`;
+        
         // Track grid generation
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'grid_generated_v3_1', {
+            gtag('event', 'grid_generated_v3_1_final', {
                 'event_category': 'grid',
                 'event_label': config.lastFontName,
                 'value': grid.length
@@ -778,7 +848,7 @@ function updateSettings() {
         
         // Track font change
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'font_change_v3_1', {
+            gtag('event', 'font_change_v3_1_final', {
                 'event_category': 'fonts',
                 'event_label': config.lastFontName,
                 'style': config.lastStyleIndex
@@ -848,14 +918,14 @@ function resetAll() {
     
     // Track reset
     if (typeof gtag !== 'undefined') {
-        gtag('event', 'reset_all_v3_1', {
+        gtag('event', 'reset_all_v3_1_final', {
             'event_category': 'actions',
             'event_label': 'full_reset'
         });
     }
 }
 
-// --- EXPORT FUNCTIONS ---
+// --- EXPORT FUNCTIONS v3.1 Final ---
 function exportPNG() {
     let canvas = document.querySelector('canvas');
     if (!canvas) {
@@ -872,8 +942,8 @@ function exportPNG() {
     // Copy original canvas
     ctx.drawImage(canvas, 0, 0);
     
-    // Add watermark
-    ctx.font = '12px Helvetica Neue';
+    // Add watermark (like in p5 drawWatermark)
+    ctx.font = '14px Helvetica Neue';
     ctx.fillStyle = config.darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
@@ -891,7 +961,7 @@ function exportPNG() {
     
     // Track export
     if (typeof gtag !== 'undefined') {
-        gtag('event', 'export_png_v3_1', {
+        gtag('event', 'export_png_v3_1_final', {
             'event_category': 'export',
             'event_label': 'png',
             'value': canvas.width * canvas.height
@@ -911,6 +981,21 @@ function exportPDF() {
         return;
     }
     
+    // First add watermark to canvas
+    const tempCanvas = document.createElement('canvas');
+    const ctx = tempCanvas.getContext('2d');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    ctx.drawImage(canvas, 0, 0);
+    
+    // Add watermark
+    ctx.font = '14px Helvetica Neue';
+    ctx.fillStyle = config.darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('Typo Umprum Playground v3.1', canvas.width - 20, canvas.height - 20);
+    ctx.fillText(new Date().toLocaleDateString(), canvas.width - 20, canvas.height - 5);
+    
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({
         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
@@ -918,25 +1003,19 @@ function exportPDF() {
         format: [canvas.width, canvas.height]
     });
     
-    // Add canvas image
-    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+    // Add watermarked image
+    const imgData = tempCanvas.toDataURL('image/jpeg', 0.9);
     pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-    
-    // Add watermark text
-    pdf.setFontSize(10);
-    pdf.setTextColor(128);
-    pdf.text('Typo Umprum Playground v3.1', canvas.width - 100, canvas.height - 30);
-    pdf.text(new Date().toLocaleDateString(), canvas.width - 100, canvas.height - 15);
     
     // Save PDF
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     pdf.save(`typo-umprum-${timestamp}.pdf`);
     
-    showToast("PDF exported successfully", 'success');
+    showToast("PDF exported with watermark", 'success');
     
     // Track export
     if (typeof gtag !== 'undefined') {
-        gtag('event', 'export_pdf_v3_1', {
+        gtag('event', 'export_pdf_v3_1_final', {
             'event_category': 'export',
             'event_label': 'pdf'
         });
@@ -956,7 +1035,7 @@ function shareOnTwitter() {
     
     // Track share
     if (typeof gtag !== 'undefined') {
-        gtag('event', 'share_twitter_v3_1', {
+        gtag('event', 'share_twitter_v3_1_final', {
             'event_category': 'social',
             'event_label': 'twitter'
         });
@@ -992,7 +1071,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Track panel toggle
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'panel_toggle_v3_1', {
+                gtag('event', 'panel_toggle_v3_1_final', {
                     'event_category': 'ui',
                     'event_label': isOpening ? 'open' : 'close'
                 });
@@ -1123,7 +1202,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Track effect toggle
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'wave_effect_toggle', {
+                gtag('event', 'wave_effect_toggle_final', {
                     'event_category': 'effects',
                     'event_label': this.checked ? 'enabled' : 'disabled'
                 });
@@ -1137,7 +1216,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Track effect toggle
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'bloom_effect_toggle', {
+                gtag('event', 'bloom_effect_toggle_final', {
                     'event_category': 'effects',
                     'event_label': this.checked ? 'enabled' : 'disabled'
                 });
@@ -1151,7 +1230,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Track effect toggle
             if (typeof gtag !== 'undefined') {
-                gtag('event', 'scatter_effect_toggle', {
+                gtag('event', 'scatter_effect_toggle_final', {
                     'event_category': 'effects',
                     'event_label': this.checked ? 'enabled' : 'disabled'
                 });
@@ -1174,11 +1253,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update max density
         updateDensitySliderMax();
         
-        // Track v3.1 launch
+        // Track v3.1 final launch
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'v3_1_launch', {
+            gtag('event', 'v3_1_final_launch', {
                 'event_category': 'version',
-                'event_label': 'trendy_refresh'
+                'event_label': 'final_perlin_modular'
             });
         }
     }, 500);
@@ -1191,7 +1270,7 @@ window.addEventListener('error', function(e) {
     
     // Track error
     if (typeof gtag !== 'undefined') {
-        gtag('event', 'error_v3_1', {
+        gtag('event', 'error_v3_1_final', {
             'event_category': 'system',
             'event_label': e.error.message,
             'value': 1
