@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Typo Umprum – Interactive Playground">
+    <title>Play – Typo Umprum</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+
+    <style>
+        /* --- GLOBAL RESET --- */
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000000;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        a { text-decoration: none; color: #000; cursor: pointer; }
+        a:hover { text-decoration: underline; }
+
+        /* --- HEADER --- */
+        .headerMenuWrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: #fff;
+            border-bottom: 1px solid #000;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .headerMenu {
+            display: flex;
+            width: 100%;
+            gap: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .homeItem { margin-right: auto; }
+        .menuItem a.greyout { color: #ccc; pointer-events: none; }
+        .menuItem a.active { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .headerMenuWrapper { padding: 0 10px; height: 40px; }
+            .headerMenu { gap: 15px; font-size: 10px; }
+            .desktop-only { display: none; }
+        }
+
+        /* --- TOOLS PANEL --- */
+        #tools-panel {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            bottom: 0;
+            width: 240px;
+            background: #fff;
+            border-right: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            z-index: 900;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 800px) {
+            #tools-panel {
+                width: 100%;
+                height: auto;
+                bottom: auto;
+                border-right: none;
+                border-bottom: 1px solid #000;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 10px;
+                gap: 10px;
+                display: none;
+            }
+            #mobile-toggle { display: block; }
+        }
+        @media (min-width: 801px) {
+            #mobile-toggle { display: none; }
+        }
+
+        /* UI CONTROLS */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        select, input[type="text"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #000;
+            border-radius: 0;
+            background: #fff;
+            font-family: inherit;
+            font-size: 12px;
+            color: #000;
+            outline: none;
+        }
+        
+        select:focus, input:focus { background: #f0f0f0; }
+
+        .select-wrapper { position: relative; }
+        .select-wrapper::after {
+            content: "▼";
+            font-size: 8px;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+            text-transform: uppercase;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 0;
+            transition: all 0.2s;
+        }
+        button:hover { background: #000; color: #fff; }
+        button.active { background: #000; color: #fff; }
+
+        input[type="range"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 2px;
+            background: #ddd;
+            outline: none;
+            margin: 10px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #000;
+            cursor: pointer;
+            border-radius: 0;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        input[type="checkbox"] {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #000;
+            border-radius: 0;
+            display: grid;
+            place-content: center;
+        }
+        input[type="checkbox"]::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            transform: scale(0);
+            background-color: #000;
+        }
+        input[type="checkbox"]:checked::before { transform: scale(1); }
+
+        /* --- CANVAS --- */
+        #canvas-container {
+            position: fixed;
+            top: 50px;
+            left: 240px;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            cursor: none;
+        }
+        @media (max-width: 800px) {
+            #canvas-container { left: 0; }
+        }
+
+        /* LOADING */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* MOBILE TOGGLE */
+        #mobile-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #000;
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        @media (max-width: 800px) {
+            #mobile-toggle-btn { display: flex; }
+        }
+
+        /* FONT FACES */
+        @font-face { 
+            font-family: 'AnanasRegular'; 
+            src: url('fonts/Ananas-Regular.woff2') format('woff2');
+            font-display: block;
+        }
+        @font-face { 
+            font-family: 'AnanasItalic'; 
+            src: url('fonts/Ananas-Italic.woff2') format('woff2');
+            font-style: italic;
+            font-display: block;
+        }
+        @font-face { 
+            font-family: 'ChlebiczechRegular'; 
+            src: url('fonts/Chlebiczech-Regular.woff2') format('woff2');
+            font-display: block;
+        }
+        @font-face { 
+            font-family: 'KorchmaRegular'; 
+            src: url('fonts/Korchma-Regular.woff2') format('woff2');
+            font-display: block;
+        }
+        @font-face { 
+            font-family: 'KorchmaItalic'; 
+            src: url('fonts/Korchma-Italic.woff2') format('woff2');
+            font-style: italic;
+            font-display: block;
+        }
+        @font-face { 
+            font-family: 'MarzGroteskBold'; 
+            src: url('fonts/MarzGrotesk-Bold.woff2') format('woff2');
+            font-weight: bold;
+            font-display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">Loading Fonts...</div>
+
+    <div class="headerMenuWrapper">
+        <div class="headerMenu">
+            <div class="homeItem"><a href="index.php">UMPRUM TYPE</a></div>
+            <div class="menuItem"><a href="typefaces.php">Typefaces</a></div>
+            <div class="menuItem desktop-only"><a class="greyout">Projects</a></div>
+            <div class="menuItem desktop-only"><a class="greyout">Journal</a></div>
+            <div class="menuItem desktop-only"><a class="greyout">Store</a></div>
+            <div class="menuItem"><a href="play.html" class="active">Playground</a></div>
+            <div class="menuItem"><a href="info.html">Info</a></div>
+        </div>
+    </div>
+
+    <div id="tools-panel">
+        <div class="control-group">
+            <label>Typeface</label>
+            <div class="select-wrapper">
+                <select id="fontSelect"></select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Style</label>
+            <div class="select-wrapper">
+                <select id="styleSelect"></select>
+            </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 10px;">
+            <label>Custom Text</label>
+            <input type="text" id="customInput" placeholder="TYPE SOMETHING...">
+            <button id="applyTextBtn" style="margin-top:5px;">Update Grid</button>
+        </div>
+
+        <div class="control-group" style="margin-top: 10px;">
+            <label>Density</label>
+            <input type="range" id="densitySlider" min="500" max="2000" value="1200" step="100">
+        </div>
+
+        <div class="control-group">
+            <label>Interaction Radius</label>
+            <input type="range" id="radiusSlider" min="150" max="500" value="280" step="10">
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-row">
+                <input type="checkbox" id="inverseToggle" checked>
+                <span>Liquid Ink Mode</span>
+            </label>
+        </div>
+
+        <div style="margin-top: auto;">
+            <button id="saveBtn">Export PNG</button>
+        </div>
+    </div>
+
+    <div id="mobile-toggle-btn">≡</div>
+
+    <div id="canvas-container"></div>
+
+    <script>
+        // --- GLOBAL VARIABLES ---
+        let p5Instance;
+        let fontLoaded = false;
+        let grid = [];
+        
+        // FONT DATA
+        const availableFonts = {
+            'Ananas': {
+                sampleText: "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest. ...",
+                styles: ['Regular', 'Italic'],
+                cssFamilies: ['AnanasRegular', 'AnanasItalic']
+            },
+            'Chlebiczech': {
+                sampleText: "Jeho jméno jsem zapomněl, prý provádí nárazové obchody...",
+                styles: ['Regular'],
+                cssFamilies: ['ChlebiczechRegular']
+            },
+            'Korchma': {
+                sampleText: "Вона імітує запальний погляд, тріумфально...",
+                styles: ['Regular', 'Italic'],
+                cssFamilies: ['KorchmaRegular', 'KorchmaItalic']
+            },
+            'März Grotesk': {
+                sampleText: "During the Thirty Years' War, the Swedes wanted to use it...",
+                styles: ['Bold'],
+                cssFamilies: ['MarzGroteskBold']
+            }
+        };
+
+        // CONFIG
+        let config = {
+            baseFontSize: 24,
+            currentFontFamily: 'AnanasRegular',
+            activeText: availableFonts['Ananas'].sampleText,
+            interactionRadius: 280,
+            maxScale: 3.5,
+            inverseMode: true,
+            targetGlyphCount: 1200,
+            mobileMaxGlyphs: 800
+        };
+
+        // --- P5 SKETCH ---
+        function sketch(p) {
+            p5Instance = p;
+
+            p.setup = function() {
+                let container = document.getElementById('canvas-container');
+                let cnv = p.createCanvas(container.offsetWidth, container.offsetHeight);
+                cnv.parent('canvas-container');
+                cnv.canvas.oncontextmenu = () => false;
+                
+                p.textAlign(p.CENTER, p.CENTER);
+                p.rectMode(p.CENTER);
+                
+                // Wait for fonts to load
+                document.fonts.ready.then(() => {
+                    fontLoaded = true;
+                    document.getElementById('loader').style.display = 'none';
+                    generateGrid();
+                });
+            };
+
+            p.draw = function() {
+                p.background(255);
+                if (!fontLoaded || grid.length === 0) return;
+                
+                // Set font every frame
+                p.textFont(config.currentFontFamily);
+                p.textSize(config.baseFontSize);
+                p.noStroke();
+
+                // Get mouse/touch position
+                let tx = p.mouseX;
+                let ty = p.mouseY;
+                if (p.touches.length > 0) {
+                    tx = p.touches[0].x;
+                    ty = p.touches[0].y;
+                }
+                if (tx === 0 && ty === 0 && p.frameCount < 10) {
+                    tx = -5000;
+                    ty = -5000;
+                }
+
+                // Liquid ink effect
+                if (config.inverseMode) {
+                    p.push();
+                    p.translate(tx, ty);
+                    p.fill(0);
+                    p.drawingContext.filter = 'blur(40px)';
+                    p.beginShape();
+                    for (let a = 0; a < p.TWO_PI; a += 0.1) {
+                        let noiseVal = p.noise(
+                            p.cos(a) + 1,
+                            p.sin(a) + 1,
+                            p.frameCount * 0.015
+                        );
+                        let r = config.interactionRadius + p.map(noiseVal, 0, 1, -60, 60);
+                        p.vertex(r * p.cos(a), r * p.sin(a));
+                    }
+                    p.endShape(p.CLOSE);
+                    p.drawingContext.filter = 'none';
+                    p.pop();
+                }
+
+                // Draw glyphs
+                for (let i = 0; i < grid.length; i++) {
+                    let g = grid[i];
+                    let d = p.dist(tx, ty, g.x, g.y);
+                    
+                    let scl = 1;
+                    let rot = 0;
+
+                    if (d < config.interactionRadius) {
+                        let normalizedDist = p.map(d, 0, config.interactionRadius, 0, 1);
+                        let proximity = 1 - normalizedDist;
+                        scl = 1 + (config.maxScale - 1) * (proximity * proximity);
+                        rot = g.angleOffset * proximity * (p.PI / 4);
+                    }
+                    
+                    // Add subtle idle movement
+                    rot += (p.noise(g.x * 0.01, g.y * 0.01, p.frameCount * 0.005) - 0.5) * 0.25;
+
+                    // Set color based on mode
+                    if (config.inverseMode) {
+                        p.fill(d < config.interactionRadius * 0.75 ? 255 : 0);
+                    } else {
+                        p.fill(0);
+                    }
+
+                    p.push();
+                    p.translate(g.x, g.y);
+                    p.scale(scl);
+                    p.rotate(rot);
+                    p.text(g.char, 0, 0);
+                    p.pop();
+                }
+            };
+
+            p.windowResized = function() {
+                let container = document.getElementById('canvas-container');
+                p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+                generateGrid();
+            };
+        }
+
+        // Initialize P5
+        new p5(sketch);
+
+        // --- GRID GENERATION ---
+        function generateGrid() {
+            if (!p5Instance || !fontLoaded) return;
+            let p = p5Instance;
+            
+            grid = [];
+            
+            // Set font for calculations
+            p.textFont(config.currentFontFamily);
+            p.textSize(config.baseFontSize);
+
+            // Calculate grid density
+            let limit = (p.width < 800) ? config.mobileMaxGlyphs : config.targetGlyphCount;
+            let targetCount = Math.min(config.targetGlyphCount, limit);
+
+            let area = p.width * p.height;
+            let avgAreaPerGlyph = area / targetCount;
+            let spacing = p.sqrt(avgAreaPerGlyph);
+
+            let gridSpacingX = spacing * 0.85;
+            let gridSpacingY = spacing * 1.15;
+
+            let cols = p.floor(p.width / gridSpacingX);
+            let rows = p.floor(p.height / gridSpacingY);
+            
+            let startX = (p.width - (cols * gridSpacingX)) / 2 + gridSpacingX / 2;
+            let startY = (p.height - (rows * gridSpacingY)) / 2 + gridSpacingY / 2;
+
+            let textIdx = 0;
+            let txt = config.activeText;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let char = txt.charAt(textIdx % txt.length);
+                    textIdx++;
+                    grid.push({
+                        char: char,
+                        x: startX + (c * gridSpacingX),
+                        y: startY + (r * gridSpacingY),
+                        angleOffset: p.random(-1, 1)
+                    });
+                }
+            }
+        }
+
+        // --- UPDATE SETTINGS ---
+        function updateSettings() {
+            if (!fontLoaded) return;
+            
+            // Get selected font
+            let fontSelect = document.getElementById('fontSelect');
+            let styleSelect = document.getElementById('styleSelect');
+            let fontName = fontSelect.value;
+            let fontData = availableFonts[fontName];
+            
+            config.currentFontFamily = fontData.cssFamilies[styleSelect.value];
+            
+            // Get custom text or use sample
+            let customInput = document.getElementById('customInput');
+            let userText = customInput.value.trim();
+            config.activeText = userText.length > 0 ? userText : fontData.sampleText;
+            
+            // Regenerate grid with new settings
+            generateGrid();
+        }
+
+        // --- UI SETUP ---
+        document.addEventListener("DOMContentLoaded", () => {
+            // Get UI elements
+            let fontSelect = document.getElementById('fontSelect');
+            let styleSelect = document.getElementById('styleSelect');
+            let customInput = document.getElementById('customInput');
+            let applyBtn = document.getElementById('applyTextBtn');
+            let saveBtn = document.getElementById('saveBtn');
+            let densitySlider = document.getElementById('densitySlider');
+            let radiusSlider = document.getElementById('radiusSlider');
+            let inverseToggle = document.getElementById('inverseToggle');
+            let mobileToggle = document.getElementById('mobile-toggle-btn');
+            let toolsPanel = document.getElementById('tools-panel');
+
+            // Mobile menu toggle
+            mobileToggle.addEventListener('click', () => {
+                toolsPanel.style.display = toolsPanel.style.display === 'flex' ? 'none' : 'flex';
+            });
+
+            // Populate font dropdown
+            for (let fontName in availableFonts) {
+                let option = document.createElement('option');
+                option.value = fontName;
+                option.text = fontName;
+                fontSelect.appendChild(option);
+            }
+
+            // Font change handler
+            fontSelect.addEventListener('change', function() {
+                let fontName = this.value;
+                let fontData = availableFonts[fontName];
+                
+                // Update style dropdown
+                styleSelect.innerHTML = '';
+                fontData.styles.forEach((style, index) => {
+                    let option = document.createElement('option');
+                    option.value = index;
+                    option.text = style;
+                    styleSelect.appendChild(option);
+                });
+                
+                // Update input placeholder with sample text
+                customInput.placeholder = fontData.sampleText.substring(0, 30) + "...";
+                
+                updateSettings();
+            });
+
+            // Style change
+            styleSelect.addEventListener('change', updateSettings);
+
+            // Custom text
+            applyBtn.addEventListener('click', updateSettings);
+            customInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') updateSettings();
+            });
+            
+            // Save button
+            saveBtn.addEventListener('click', () => {
+                let canvas = document.querySelector('canvas');
+                if (canvas) {
+                    let link = document.createElement('a');
+                    link.download = 'typoumprum-playground.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }
+            });
+
+            // Sliders
+            densitySlider.addEventListener('input', function() {
+                config.targetGlyphCount = parseInt(this.value);
+                generateGrid();
+            });
+            
+            radiusSlider.addEventListener('input', function() {
+                config.interactionRadius = parseInt(this.value);
+            });
+            
+            inverseToggle.addEventListener('change', function() {
+                config.inverseMode = this.checked;
+            });
+
+            // Initialize with first font
+            if (fontSelect.options.length > 0) {
+                fontSelect.selectedIndex = 0;
+                fontSelect.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+</body>
+</html>
