@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Typo Umprum – Interactive Playground</title>
+    <style>
+        /* BRUTALIST UI STYLING */
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #ffffff; font-family: 'Courier New', Courier, monospace; }
+        canvas { display: block; cursor: none; } /* Hide cursor */
+
+        #ui {
+            position: fixed; top: 20px; left: 20px;
+            background: #fff; padding: 15px; border: 2px solid #000;
+            display: flex; flex-direction: column; gap: 15px;
+            z-index: 100; width: 240px;
+            box-shadow: 8px 8px 0px #000; /* Hard shadow */
+            cursor: default;
+        }
+        
+        label { font-size: 10px; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; margin-bottom: 5px; display: block; color: #000; }
+        
+        select, input[type="text"], button {
+            font-family: inherit; font-size: 12px; padding: 8px;
+            border: 1px solid #000; background: #fff; width: 100%;
+            box-sizing: border-box; border-radius: 0; outline: none;
+        }
+        
+        button { background: #000; color: #fff; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: transform 0.1s; }
+        button:active { transform: translate(2px, 2px); }
+        button:hover { background: #333; }
+        button.secondary { background: #fff; color: #000; }
+        button.secondary:hover { background: #eee; }
+
+        .row { display: flex; gap: 5px; }
+        input[type="range"] { width: 100%; accent-color: #000; cursor: pointer; height: 2px; background: #000; appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #000; border-radius: 0; cursor: pointer; }
+        
+        .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: bold; user-select: none; cursor: pointer; }
+        input[type="checkbox"] { width: 15px; height: 15px; accent-color: #000; border: 1px solid #000; border-radius: 0; }
+
+        /* FONTS */
+        @font-face { font-family: 'AnanasRegular'; src: url('fonts/Ananas-Regular.woff2') format('woff2'); }
+        @font-face { font-family: 'AnanasItalic'; src: url('fonts/Ananas-Italic.woff2') format('woff2'); font-style: italic; }
+        @font-face { font-family: 'ChlebiczechRegular'; src: url('fonts/Chlebiczech-Regular.woff2') format('woff2'); }
+        @font-face { font-family: 'KorchmaRegular'; src: url('fonts/Korchma-Regular.woff2') format('woff2'); }
+        @font-face { font-family: 'KorchmaItalic'; src: url('fonts/Korchma-Italic.woff2') format('woff2'); font-style: italic; }
+        @font-face { font-family: 'MarzGroteskBold'; src: url('fonts/MarzGrotesk-Bold.woff2') format('woff2'); font-weight: bold; }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+</head>
+<body>
+
+    <div id="ui">
+        <div>
+            <label>Typeface</label>
+            <div class="row">
+                <select id="fontSelect"></select>
+                <select id="styleSelect"></select>
+            </div>
+        </div>
+
+        <div>
+            <label>Input</label>
+            <div class="row">
+                <input type="text" id="customInput" placeholder="TYPE HERE...">
+                <button id="applyTextBtn" style="width: auto;">→</button>
+            </div>
+        </div>
+
+        <div>
+            <label>Density</label>
+            <input type="range" id="densitySlider" min="500" max="2000" value="1200" step="100">
+        </div>
+        <div>
+            <label>Optic Size</label>
+            <input type="range" id="radiusSlider" min="150" max="450" value="250" step="10">
+        </div>
+        <div>
+            <label>Magnification</label>
+            <input type="range" id="magSlider" min="1.5" max="5.0" value="2.5" step="0.1">
+        </div>
+
+        <div class="toggle-row">
+            <input type="checkbox" id="inverseToggle" checked>
+            <span>X-RAY LENS MODE</span>
+        </div>
+
+        <button id="saveBtn" style="margin-top: 10px;">Export PNG</button>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const availableFonts = {
+            'Ananas': {
+                sampleText: "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest. ",
+                styles: ['Regular', 'Italic'], cssFamilies: ['AnanasRegular', 'AnanasItalic']
+            },
+            'Chlebiczech': {
+                sampleText: "Jeho jméno jsem zapomněl, prý provádí nárazové obchody... ",
+                styles: ['Regular'], cssFamilies: ['ChlebiczechRegular']
+            },
+            'Korchma': {
+                sampleText: "Вона імітує запальний погляд, тріумфально... ",
+                styles: ['Regular', 'Italic'], cssFamilies: ['KorchmaRegular', 'KorchmaItalic']
+            },
+            'März Grotesk': {
+                sampleText: "During the Thirty Years' War, the Swedes wanted to use it... ",
+                styles: ['Bold'], cssFamilies: ['MarzGroteskBold']
+            }
+        };
+
+        // --- CONFIG ---
+        let config = {
+            baseFontSize: 24,
+            currentFontFamily: 'AnanasRegular',
+            activeText: availableFonts['Ananas'].sampleText,
+            userText: "",
+            interactionRadius: 250,
+            lensMag: 2.5,        // Magnification power
+            targetGlyphCount: 1200,
+            lensMode: true
+        };
+
+        let grid = [];
+        let gridSpacingX, gridSpacingY;
+        
+        // Velocity Tracking
+        let vX = 0, vY = 0;
+        let smoothVX = 0, smoothVY = 0;
+
+        // UI Refs
+        let fontSelect, styleSelect, densitySlider, radiusSlider, magSlider, inverseToggle;
+
+        function setup() {
+            let cnv = createCanvas(windowWidth, windowHeight);
+            cnv.canvas.oncontextmenu = () => false;
+            
+            initUI();
+            textAlign(CENTER, CENTER);
+            rectMode(CENTER);
+            
+            updateFontSettings();
+        }
+
+        function draw() {
+            background(255);
+            noStroke();
+
+            let tx = mouseX;
+            let ty = mouseY;
+            // Hide lens initially
+            if (tx === 0 && ty === 0 && frameCount < 10) { tx = -5000; ty = -5000; }
+
+            // 1. Calculate Velocity (for Kinetic Shear)
+            vX = mouseX - pmouseX;
+            vY = mouseY - pmouseY;
+            // Smooth the velocity for less jittery movement
+            smoothVX = lerp(smoothVX, vX, 0.1);
+            smoothVY = lerp(smoothVY, vY, 0.1);
+            
+            // Limit shear
+            let shearAmtX = map(smoothVX, -50, 50, -0.5, 0.5, true);
+            let shearAmtY = map(smoothVY, -50, 50, -0.5, 0.5, true);
+
+            // --- LAYER 1: THE BACKGROUND GRID (Black, Static) ---
+            // We only draw glyphs OUTSIDE the lens radius to avoid overdraw (optimization)
+            // or just draw them all if we want the "Scanner" feel (lens covers them).
+            
+            fill(0); // Black Text
+            
+            for (let i = 0; i < grid.length; i++) {
+                let g = grid[i];
+                let d = dist(tx, ty, g.x, g.y);
+                
+                // OPTIONAL: Hide background glyphs if they are deep inside the lens
+                // to create a cleaner "cut". 
+                if (config.lensMode && d < config.interactionRadius - 10) continue; 
+                
+                push();
+                translate(g.x, g.y);
+                // Subtle idle drift
+                rotate(g.angleOffset * 0.1 + frameCount * 0.002); 
+                text(g.char, 0, 0);
+                pop();
+            }
+
+            // --- LAYER 2: THE OPTICAL LENS (White, Distorted) ---
+            if (config.lensMode) {
+                // 1. Draw the "Void" (Black Circle)
+                fill(0);
+                circle(tx, ty, config.interactionRadius * 2);
+
+                // 2. Draw the "Fisheye" Text inside
+                // We use drawingContext.clip() to ensure text stays strictly inside the circle
+                drawingContext.save();
+                drawingContext.beginPath();
+                drawingContext.arc(tx, ty, config.interactionRadius, 0, TWO_PI);
+                drawingContext.clip();
+
+                fill(255); // White Text
+
+                // Iterate grid again (Optimized: only check glyphs near mouse)
+                // We check a bounding box around mouse to avoid looping 1500 chars unnecessarily
+                // Note: P5 JS is single threaded, so simple distance check is usually fast enough for <2000 items.
+                
+                for (let i = 0; i < grid.length; i++) {
+                    let g = grid[i];
+                    
+                    // Simple Bounding Box check first (faster than dist)
+                    if (Math.abs(g.x - tx) > config.interactionRadius * 1.5) continue;
+                    if (Math.abs(g.y - ty) > config.interactionRadius * 1.5) continue;
+
+                    let d = dist(tx, ty, g.x, g.y);
+
+                    // Only render if roughly inside (plus padding for magnification)
+                    if (d < config.interactionRadius * 1.2) {
+                        
+                        // --- FISHEYE MATH ---
+                        // We map the distance: 0 (center) stays 0. Edge stays edge. 
+                        // But the curve pushes pixels away from center or pulls them in.
+                        
+                        let dx = g.x - tx;
+                        let dy = g.y - ty;
+                        
+                        // Calculate "distorted" position
+                        // Magnification means the grid looks "zoomed in", so points effectively move OUTWARD from center
+                        // relative to the lens center.
+                        
+                        // BUT, a magnifying glass actually shows a smaller portion of the grid, scaled UP.
+                        // So we effectively pull coordinates IN towards the mouse, then Scale up.
+                        
+                        let mag = config.lensMag;
+                        
+                        // Position logic: 
+                        // To show the glyph at (g.x, g.y) magnified, we need to push it AWAY from center.
+                        // NewPos = Center + (Offset * Mag)
+                        let fishX = tx + dx * mag;
+                        let fishY = ty + dy * mag;
+                        
+                        // --- RENDER ---
+                        push();
+                        translate(fishX, fishY);
+                        scale(mag); // Make the glyph itself bigger
+                        
+                        // Apply Kinetic Velocity Shear (The "Jelly" effect)
+                        // Text leans opposite to motion (drag) or with motion?
+                        // Let's make it lean INTO motion like it's fast.
+                        shearX(-shearAmtX); 
+                        shearY(-shearAmtY);
+                        
+                        text(g.char, 0, 0);
+                        pop();
+                    }
+                }
+                drawingContext.restore(); // Remove clip
+                
+                // Optional: Draw a thin white ring around the lens for "Technical" look
+                noFill();
+                stroke(255);
+                strokeWeight(1);
+                circle(tx, ty, config.interactionRadius * 2);
+                noStroke();
+            }
+        }
+
+        // --- UI & GENERATION ---
+        function initUI() {
+            fontSelect = document.getElementById('fontSelect');
+            styleSelect = document.getElementById('styleSelect');
+            densitySlider = document.getElementById('densitySlider');
+            radiusSlider = document.getElementById('radiusSlider');
+            magSlider = document.getElementById('magSlider');
+            inverseToggle = document.getElementById('inverseToggle');
+
+            // Populate Fonts
+            for (let fontName in availableFonts) {
+                let option = document.createElement('option');
+                option.value = fontName;
+                option.text = fontName.toUpperCase(); // Stylistic choice
+                fontSelect.appendChild(option);
+            }
+
+            // Events
+            fontSelect.addEventListener('change', handleFontChange);
+            styleSelect.addEventListener('change', updateFontSettings);
+            
+            document.getElementById('applyTextBtn').addEventListener('click', () => {
+                config.userText = document.getElementById('customInput').value.trim();
+                determineActiveText();
+                generateGrid();
+            });
+            document.getElementById('customInput').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') document.getElementById('applyTextBtn').click();
+            });
+
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                saveCanvas('typoumprum-lens-' + Date.now(), 'png');
+            });
+
+            densitySlider.addEventListener('input', () => {
+                config.targetGlyphCount = parseInt(densitySlider.value);
+                generateGrid();
+            });
+            radiusSlider.addEventListener('input', () => { config.interactionRadius = parseInt(radiusSlider.value); });
+            magSlider.addEventListener('input', () => { config.lensMag = parseFloat(magSlider.value); });
+            inverseToggle.addEventListener('change', () => { config.lensMode = inverseToggle.checked; });
+
+            handleFontChange();
+        }
+
+        function handleFontChange() {
+            let fontName = fontSelect.value;
+            let fontData = availableFonts[fontName];
+            styleSelect.innerHTML = '';
+            fontData.styles.forEach((style, index) => {
+                let option = document.createElement('option');
+                option.value = index;
+                option.text = style.toUpperCase();
+                styleSelect.appendChild(option);
+            });
+            updateFontSettings();
+        }
+
+        function updateFontSettings() {
+            let fontName = fontSelect.value;
+            let styleIndex = styleSelect.value;
+            let fontData = availableFonts[fontName];
+            config.currentFontFamily = fontData.cssFamilies[styleIndex];
+            
+            textFont(config.currentFontFamily);
+            textSize(config.baseFontSize);
+            determineActiveText();
+            generateGrid();
+        }
+
+        function determineActiveText() {
+            if (config.userText.length > 0) config.activeText = config.userText;
+            else config.activeText = availableFonts[fontSelect.value].sampleText;
+        }
+
+        function generateGrid() {
+            grid = [];
+            let area = width * height;
+            // Slightly looser spacing for this cleaner look
+            let spacing = sqrt(area / config.targetGlyphCount);
+            
+            gridSpacingX = spacing * 0.9; 
+            gridSpacingY = spacing * 1.1;
+
+            let cols = ceil(width / gridSpacingX);
+            let rows = ceil(height / gridSpacingY);
+            
+            let startX = (width - (cols * gridSpacingX)) / 2 + gridSpacingX / 2;
+            let startY = (height - (rows * gridSpacingY)) / 2 + gridSpacingY / 2;
+
+            let textIdx = 0;
+            let txt = config.activeText;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let char = txt.charAt(textIdx % txt.length);
+                    textIdx++;
+                    grid.push({
+                        char: char,
+                        x: startX + (c * gridSpacingX),
+                        y: startY + (r * gridSpacingY),
+                        angleOffset: random(-1, 1) 
+                    });
+                }
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            generateGrid();
+        }
+    </script>
+</body>
+</html>

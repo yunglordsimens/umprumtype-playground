@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Typo Umprum – Interactive Playground</title>
+    <style>
+        /* CORE STYLING */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrollbars */
+            background-color: #ffffff;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block; /* Remove default inline spacing */
+            cursor: crosshair;
+        }
+
+        /* FONT DEFINITIONS 
+           Update the 'src' paths if your folder structure differs. 
+           Assumed structure: /play.html and /fonts/Ananas-Regular.woff2
+        */
+        @font-face {
+            font-family: 'AnanasRegular';
+            src: url('fonts/Ananas-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'AnanasItalic';
+            src: url('fonts/Ananas-Italic.woff2') format('woff2');
+            font-weight: normal;
+            font-style: italic;
+        }
+        @font-face {
+            font-family: 'ChlebiczechRegular';
+            src: url('fonts/Chlebiczech-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'KorchmaRegular';
+            src: url('fonts/Korchma-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'KorchmaItalic';
+            src: url('fonts/Korchma-Italic.woff2') format('woff2');
+            font-weight: normal;
+            font-style: italic;
+        }
+        @font-face {
+            font-family: 'MarzGroteskBold';
+            src: url('fonts/MarzGrotesk-Bold.woff2') format('woff2');
+            font-weight: bold;
+            font-style: normal;
+        }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+</head>
+<body>
+    <script>
+        // --- PHASE 1 CONFIGURATION ---
+        const config = {
+            // Appearance
+            baseFontSize: 24,
+            currentFontFamily: 'AnanasRegular', // Hardcoded for Phase 1
+            sampleText: "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest. ",
+            
+            // Interaction Params
+            interactionRadius: 250, // px radius of cursor influence
+            maxScale: 3.5,          // Scale factor at center of cursor
+            
+            // Performance / Density Limits
+            maxGlyphsDesktop: 1500,
+            maxGlyphsMobile: 600,
+            mobileBreakpoint: 800
+        };
+
+        // State variables
+        let grid = []; // Will hold objects: { char, x, y, angleOffset }
+        let gridSpacingX, gridSpacingY;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Text settings
+            textFont(config.currentFontFamily);
+            textSize(config.baseFontSize);
+            textAlign(CENTER, CENTER);
+            rectMode(CENTER);
+            
+            // Calculate grid spacing based on font metrics
+            // We use 'M' to gauge width + some breathing room
+            let charWidth = textWidth('M');
+            gridSpacingX = charWidth * 1.5; 
+            gridSpacingY = config.baseFontSize * 1.4; // 1.4 leading
+            
+            generateGrid();
+        }
+
+        function draw() {
+            background(255);
+            fill(0);
+            noStroke();
+
+            // Track cursor (supports mouse and simple touch mapping)
+            let tx = mouseX;
+            let ty = mouseY;
+
+            // Optimization: If mouse is at 0,0 (often default on load), move it off-screen
+            if (tx === 0 && ty === 0 && frameCount < 10) {
+                tx = -1000;
+                ty = -1000;
+            }
+
+            // Iterate over all glyphs
+            for (let i = 0; i < grid.length; i++) {
+                let g = grid[i];
+                
+                // Calculate distance from cursor to glyph center
+                let d = dist(tx, ty, g.x, g.y);
+                
+                // Default state
+                let scl = 1;
+                let rot = 0;
+
+                // Reactive Logic
+                if (d < config.interactionRadius) {
+                    // Normalize distance (0 to 1)
+                    let normalizedDist = map(d, 0, config.interactionRadius, 0, 1);
+                    
+                    // Easing: Smoothstep for organic feel (optional, but looks better)
+                    // We flip it so 0 is far, 1 is close
+                    let proximity = 1 - normalizedDist;
+                    
+                    // Calculate Scale (1x to maxScale)
+                    scl = 1 + (config.maxScale - 1) * (proximity * proximity); // Quadratic falloff
+                    
+                    // Calculate Rotation (Organic tumble)
+                    // g.angleOffset gives each letter a unique spin direction
+                    rot = g.angleOffset * proximity * (PI / 4);
+                }
+
+                // Render
+                push();
+                translate(g.x, g.y);
+                scale(scl);
+                rotate(rot);
+                text(g.char, 0, 0);
+                pop();
+            }
+        }
+
+        function generateGrid() {
+            grid = [];
+            
+            // Determine Glyph Limit based on device
+            let maxGlyphs = windowWidth < config.mobileBreakpoint ? config.maxGlyphsMobile : config.maxGlyphsDesktop;
+            
+            // Calculate columns and rows
+            let cols = floor(width / gridSpacingX);
+            let rows = floor(height / gridSpacingY);
+            
+            // If density is too high, increase spacing to stay under performance limit
+            let totalSlots = cols * rows;
+            if (totalSlots > maxGlyphs) {
+                // Adjust spacing proportionally
+                let ratio = sqrt(totalSlots / maxGlyphs);
+                gridSpacingX *= ratio;
+                gridSpacingY *= ratio;
+                cols = floor(width / gridSpacingX);
+                rows = floor(height / gridSpacingY);
+            }
+
+            // Center the grid block on screen
+            let startX = (width - (cols * gridSpacingX)) / 2 + gridSpacingX / 2;
+            let startY = (height - (rows * gridSpacingY)) / 2 + gridSpacingY / 2;
+
+            let textIdx = 0;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    // Pick character cycling through sample text
+                    let char = config.sampleText.charAt(textIdx % config.sampleText.length);
+                    textIdx++;
+
+                    grid.push({
+                        char: char,
+                        x: startX + (c * gridSpacingX),
+                        y: startY + (r * gridSpacingY),
+                        // Random rotation direction (-1 to 1) pre-calculated for consistency
+                        angleOffset: random(-1, 1) 
+                    });
+                }
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            generateGrid();
+        }
+    </script>
+</body>
+</html>

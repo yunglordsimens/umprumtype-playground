@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Typo Umprum – Interactive Playground</title>
+    <style>
+        /* CORE STYLING */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* UI OVERLAY */
+        #ui {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border: 1px solid #000;
+            border-radius: 0px;
+            display: flex;
+            flex-direction: column; /* Stack vertically now */
+            gap: 10px;
+            z-index: 100;
+            width: 220px;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
+        }
+        
+        /* Form Elements */
+        label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            display: block;
+        }
+        select, input[type="text"] {
+            font-family: sans-serif;
+            font-size: 14px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            background: #fff;
+            width: 100%;
+            box-sizing: border-box; 
+        }
+        input[type="text"] {
+            margin-bottom: 5px;
+        }
+        button {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            width: 100%;
+        }
+        button:hover {
+            background: #333;
+        }
+        .row {
+            display: flex;
+            gap: 5px;
+        }
+        
+        /* Sliders */
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        /* Checkbox wrapper */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        /* FONT DEFINITIONS */
+        @font-face { font-family: 'AnanasRegular'; src: url('fonts/Ananas-Regular.woff2') format('woff2'); }
+        @font-face { font-family: 'AnanasItalic'; src: url('fonts/Ananas-Italic.woff2') format('woff2'); font-style: italic; }
+        @font-face { font-family: 'ChlebiczechRegular'; src: url('fonts/Chlebiczech-Regular.woff2') format('woff2'); }
+        @font-face { font-family: 'KorchmaRegular'; src: url('fonts/Korchma-Regular.woff2') format('woff2'); }
+        @font-face { font-family: 'KorchmaItalic'; src: url('fonts/Korchma-Italic.woff2') format('woff2'); font-style: italic; }
+        @font-face { font-family: 'MarzGroteskBold'; src: url('fonts/MarzGrotesk-Bold.woff2') format('woff2'); font-weight: bold; }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+</head>
+<body>
+
+    <div id="ui">
+        <div>
+            <label>Font</label>
+            <div class="row">
+                <select id="fontSelect"></select>
+                <select id="styleSelect"></select>
+            </div>
+        </div>
+
+        <div>
+            <label>Content</label>
+            <input type="text" id="customInput" placeholder="Type here...">
+            <button id="applyTextBtn">Update Text</button>
+        </div>
+
+        <div>
+            <label>Density</label>
+            <input type="range" id="densitySlider" min="500" max="2500" value="1500" step="100">
+        </div>
+        <div>
+            <label>Effect Radius</label>
+            <input type="range" id="radiusSlider" min="100" max="500" value="250" step="10">
+        </div>
+
+        <div class="checkbox-row">
+            <input type="checkbox" id="inverseToggle">
+            <span>Inverse Hover</span>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & CONFIGURATION ---
+        const availableFonts = {
+            'Ananas': {
+                sampleText: "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest. ...",
+                styles: ['Regular', 'Italic'],
+                cssFamilies: ['AnanasRegular', 'AnanasItalic']
+            },
+            'Chlebiczech': {
+                sampleText: "Jeho jméno jsem zapomněl, prý provádí nárazové obchody...",
+                styles: ['Regular'],
+                cssFamilies: ['ChlebiczechRegular']
+            },
+            'Korchma': {
+                sampleText: "Вона імітує запальний погляд, тріумфально...",
+                styles: ['Regular', 'Italic'],
+                cssFamilies: ['KorchmaRegular', 'KorchmaItalic']
+            },
+            'März Grotesk': {
+                sampleText: "During the Thirty Years' War, the Swedes wanted to use it...",
+                styles: ['Bold'],
+                cssFamilies: ['MarzGroteskBold']
+            }
+        };
+
+        // Configuration State
+        let config = {
+            baseFontSize: 24,
+            currentFontFamily: 'AnanasRegular',
+            activeText: availableFonts['Ananas'].sampleText, // The text actually being drawn
+            userText: "", // What the user typed (if empty, we use sample)
+            
+            // Interaction Params
+            interactionRadius: 250,
+            maxScale: 3.5,
+            inverseMode: false,
+            
+            // Density
+            targetGlyphCount: 1500
+        };
+
+        // State variables
+        let grid = [];
+        let gridSpacingX, gridSpacingY;
+        
+        // DOM Elements
+        let fontSelect, styleSelect, customInput, applyBtn;
+        let densitySlider, radiusSlider, inverseToggle;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            initUI();
+
+            textAlign(CENTER, CENTER);
+            rectMode(CENTER);
+            
+            // Initial trigger
+            updateFontSettings();
+        }
+
+        function draw() {
+            background(255);
+            noStroke();
+
+            let tx = mouseX;
+            let ty = mouseY;
+            // Move cursor off-screen initially
+            if (tx === 0 && ty === 0 && frameCount < 10) { tx = -1000; ty = -1000; }
+
+            // INVERSE MODE: Draw the backing circle first
+            if (config.inverseMode) {
+                fill(0);
+                circle(tx, ty, config.interactionRadius * 2);
+            }
+
+            // DRAW GLYPHS
+            for (let i = 0; i < grid.length; i++) {
+                let g = grid[i];
+                let d = dist(tx, ty, g.x, g.y);
+                
+                let scl = 1;
+                let rot = 0;
+                let isInside = false;
+
+                if (d < config.interactionRadius) {
+                    isInside = true;
+                    let normalizedDist = map(d, 0, config.interactionRadius, 0, 1);
+                    let proximity = 1 - normalizedDist;
+                    scl = 1 + (config.maxScale - 1) * (proximity * proximity); 
+                    rot = g.angleOffset * proximity * (PI / 4);
+                }
+
+                // Color Logic
+                if (config.inverseMode) {
+                    // Inside circle = White, Outside = Black
+                    if (isInside) fill(255);
+                    else fill(0);
+                } else {
+                    // Normal Mode = Always Black
+                    fill(0);
+                }
+
+                push();
+                translate(g.x, g.y);
+                scale(scl);
+                rotate(rot);
+                text(g.char, 0, 0);
+                pop();
+            }
+        }
+
+        // --- UI & LOGIC ---
+
+        function initUI() {
+            // Get Elements
+            fontSelect = document.getElementById('fontSelect');
+            styleSelect = document.getElementById('styleSelect');
+            customInput = document.getElementById('customInput');
+            applyBtn = document.getElementById('applyTextBtn');
+            densitySlider = document.getElementById('densitySlider');
+            radiusSlider = document.getElementById('radiusSlider');
+            inverseToggle = document.getElementById('inverseToggle');
+
+            // Populate Fonts
+            for (let fontName in availableFonts) {
+                let option = document.createElement('option');
+                option.value = fontName;
+                option.text = fontName;
+                fontSelect.appendChild(option);
+            }
+
+            // Listeners
+            fontSelect.addEventListener('change', handleFontChange);
+            styleSelect.addEventListener('change', updateFontSettings);
+            
+            applyBtn.addEventListener('click', () => {
+                config.userText = customInput.value.trim();
+                determineActiveText(); // Decide whether to use User Text or Sample Text
+                generateGrid();
+            });
+
+            densitySlider.addEventListener('input', () => {
+                config.targetGlyphCount = parseInt(densitySlider.value);
+                generateGrid();
+            });
+
+            radiusSlider.addEventListener('input', () => {
+                config.interactionRadius = parseInt(radiusSlider.value);
+            });
+
+            inverseToggle.addEventListener('change', () => {
+                config.inverseMode = inverseToggle.checked;
+            });
+
+            // Initial Style Populate
+            handleFontChange();
+        }
+
+        function handleFontChange() {
+            let fontName = fontSelect.value;
+            let fontData = availableFonts[fontName];
+
+            styleSelect.innerHTML = '';
+            fontData.styles.forEach((style, index) => {
+                let option = document.createElement('option');
+                option.value = index;
+                option.text = style;
+                styleSelect.appendChild(option);
+            });
+            updateFontSettings();
+        }
+
+        function updateFontSettings() {
+            let fontName = fontSelect.value;
+            let styleIndex = styleSelect.value;
+            let fontData = availableFonts[fontName];
+
+            config.currentFontFamily = fontData.cssFamilies[styleIndex];
+            
+            // Apply Font
+            textFont(config.currentFontFamily);
+            textSize(config.baseFontSize);
+
+            determineActiveText();
+            generateGrid();
+        }
+
+        function determineActiveText() {
+            // If user has typed something, use it. Otherwise, use the font's sample text.
+            if (config.userText.length > 0) {
+                config.activeText = config.userText;
+            } else {
+                let fontName = fontSelect.value;
+                config.activeText = availableFonts[fontName].sampleText;
+            }
+        }
+
+        function generateGrid() {
+            grid = [];
+            
+            // Calculate grid dimensions based on target density
+            // Formula: sqrt(area / count) = spacing
+            let area = width * height;
+            let avgAreaPerGlyph = area / config.targetGlyphCount;
+            let spacing = sqrt(avgAreaPerGlyph);
+
+            // Aspect ratio of a generic char (roughly 0.6 to 0.7 for standard fonts)
+            // We'll use textWidth('M') to be more precise
+            let mWidth = textWidth('M');
+            
+            // Adjust X/Y spacing to respect font aspect ratio while hitting target density
+            gridSpacingX = spacing * 0.8; 
+            gridSpacingY = spacing * 1.2;
+
+            // Recalculate cols/rows
+            let cols = floor(width / gridSpacingX);
+            let rows = floor(height / gridSpacingY);
+
+            // Centering logic
+            let startX = (width - (cols * gridSpacingX)) / 2 + gridSpacingX / 2;
+            let startY = (height - (rows * gridSpacingY)) / 2 + gridSpacingY / 2;
+
+            let textIdx = 0;
+            let txt = config.activeText;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let char = txt.charAt(textIdx % txt.length);
+                    textIdx++;
+
+                    grid.push({
+                        char: char,
+                        x: startX + (c * gridSpacingX),
+                        y: startY + (r * gridSpacingY),
+                        angleOffset: random(-1, 1) 
+                    });
+                }
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            generateGrid();
+        }
+    </script>
+</body>
+</html>

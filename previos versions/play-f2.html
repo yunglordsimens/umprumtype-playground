@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Typo Umprum – Interactive Playground</title>
+    <style>
+        /* CORE STYLING */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: sans-serif;
+        }
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* PHASE 2 UI OVERLAY */
+        #ui {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border: 1px solid #000;
+            border-radius: 4px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        select {
+            font-family: sans-serif;
+            font-size: 14px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        /* FONT DEFINITIONS */
+        @font-face {
+            font-family: 'AnanasRegular';
+            src: url('fonts/Ananas-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'AnanasItalic';
+            src: url('fonts/Ananas-Italic.woff2') format('woff2');
+            font-weight: normal;
+            font-style: italic;
+        }
+        @font-face {
+            font-family: 'ChlebiczechRegular';
+            src: url('fonts/Chlebiczech-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'KorchmaRegular';
+            src: url('fonts/Korchma-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'KorchmaItalic';
+            src: url('fonts/Korchma-Italic.woff2') format('woff2');
+            font-weight: normal;
+            font-style: italic;
+        }
+        @font-face {
+            font-family: 'MarzGroteskBold';
+            src: url('fonts/MarzGrotesk-Bold.woff2') format('woff2');
+            font-weight: bold;
+            font-style: normal;
+        }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+</head>
+<body>
+
+    <div id="ui">
+        <select id="fontSelect"></select>
+        <select id="styleSelect"></select>
+    </div>
+
+    <script>
+        // --- DATA & CONFIGURATION ---
+        const availableFonts = {
+            'Ananas': {
+                sampleText: "Imituje žhavý pohled, vítězně, jako kdyby vynalezla nějakou novou neřest. ...",
+                styles: ['Regular', 'Italic'],
+                cssFamilies: ['AnanasRegular', 'AnanasItalic']
+            },
+            'Chlebiczech': {
+                sampleText: "Jeho jméno jsem zapomněl, prý provádí nárazové obchody...",
+                styles: ['Regular'],
+                cssFamilies: ['ChlebiczechRegular']
+            },
+            'Korchma': {
+                sampleText: "Вона імітує запальний погляд, тріумфально...",
+                styles: ['Regular', 'Italic'],
+                cssFamilies: ['KorchmaRegular', 'KorchmaItalic']
+            },
+            'März Grotesk': {
+                sampleText: "During the Thirty Years' War, the Swedes wanted to use it...",
+                styles: ['Bold'],
+                cssFamilies: ['MarzGroteskBold']
+            }
+        };
+
+        let config = {
+            baseFontSize: 24,
+            currentFontFamily: 'AnanasRegular',
+            currentSampleText: availableFonts['Ananas'].sampleText,
+            interactionRadius: 250,
+            maxScale: 3.5,
+            maxGlyphsDesktop: 1500,
+            maxGlyphsMobile: 600,
+            mobileBreakpoint: 800
+        };
+
+        // State variables
+        let grid = [];
+        let gridSpacingX, gridSpacingY;
+        let fontSelect, styleSelect;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // Initialize UI logic
+            initUI();
+
+            // Initial P5 text settings
+            textAlign(CENTER, CENTER);
+            rectMode(CENTER);
+            
+            // Trigger initial layout
+            updateFontSettings();
+        }
+
+        function draw() {
+            background(255);
+            fill(0);
+            noStroke();
+
+            let tx = mouseX;
+            let ty = mouseY;
+            if (tx === 0 && ty === 0 && frameCount < 10) { tx = -1000; ty = -1000; }
+
+            for (let i = 0; i < grid.length; i++) {
+                let g = grid[i];
+                let d = dist(tx, ty, g.x, g.y);
+                
+                let scl = 1;
+                let rot = 0;
+
+                if (d < config.interactionRadius) {
+                    let normalizedDist = map(d, 0, config.interactionRadius, 0, 1);
+                    let proximity = 1 - normalizedDist;
+                    scl = 1 + (config.maxScale - 1) * (proximity * proximity); 
+                    rot = g.angleOffset * proximity * (PI / 4);
+                }
+
+                push();
+                translate(g.x, g.y);
+                scale(scl);
+                rotate(rot);
+                text(g.char, 0, 0);
+                pop();
+            }
+        }
+
+        // --- CORE LOGIC ---
+
+        function initUI() {
+            fontSelect = document.getElementById('fontSelect');
+            styleSelect = document.getElementById('styleSelect');
+
+            // Populate Font Dropdown
+            for (let fontName in availableFonts) {
+                let option = document.createElement('option');
+                option.value = fontName;
+                option.text = fontName;
+                fontSelect.appendChild(option);
+            }
+
+            // Event Listeners
+            fontSelect.addEventListener('change', handleFontChange);
+            styleSelect.addEventListener('change', updateFontSettings);
+
+            // Trigger initial population of Style Dropdown
+            handleFontChange(); 
+        }
+
+        function handleFontChange() {
+            let fontName = fontSelect.value;
+            let fontData = availableFonts[fontName];
+
+            // Clear and repopulate styles
+            styleSelect.innerHTML = '';
+            fontData.styles.forEach((style, index) => {
+                let option = document.createElement('option');
+                option.value = index; // We use index to map back to cssFamilies array
+                option.text = style;
+                styleSelect.appendChild(option);
+            });
+
+            // Update settings immediately
+            updateFontSettings();
+        }
+
+        function updateFontSettings() {
+            let fontName = fontSelect.value;
+            let styleIndex = styleSelect.value;
+            let fontData = availableFonts[fontName];
+
+            // Update Configuration
+            config.currentFontFamily = fontData.cssFamilies[styleIndex];
+            config.currentSampleText = fontData.sampleText;
+
+            // Apply to P5
+            textFont(config.currentFontFamily);
+            textSize(config.baseFontSize);
+
+            // Recalculate Grid
+            // We need to re-measure grid spacing because fonts have different widths
+            let charWidth = textWidth('M'); 
+            gridSpacingX = charWidth * 1.5; 
+            gridSpacingY = config.baseFontSize * 1.4;
+
+            generateGrid();
+        }
+
+        function generateGrid() {
+            grid = [];
+            let maxGlyphs = windowWidth < config.mobileBreakpoint ? config.maxGlyphsMobile : config.maxGlyphsDesktop;
+            
+            let cols = floor(width / gridSpacingX);
+            let rows = floor(height / gridSpacingY);
+            
+            let totalSlots = cols * rows;
+            if (totalSlots > maxGlyphs) {
+                let ratio = sqrt(totalSlots / maxGlyphs);
+                gridSpacingX *= ratio;
+                gridSpacingY *= ratio;
+                cols = floor(width / gridSpacingX);
+                rows = floor(height / gridSpacingY);
+            }
+
+            let startX = (width - (cols * gridSpacingX)) / 2 + gridSpacingX / 2;
+            let startY = (height - (rows * gridSpacingY)) / 2 + gridSpacingY / 2;
+
+            let textIdx = 0;
+            // Use the specific sample text for this font
+            let txt = config.currentSampleText;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let char = txt.charAt(textIdx % txt.length);
+                    textIdx++;
+
+                    grid.push({
+                        char: char,
+                        x: startX + (c * gridSpacingX),
+                        y: startY + (r * gridSpacingY),
+                        angleOffset: random(-1, 1) 
+                    });
+                }
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            generateGrid();
+        }
+    </script>
+</body>
+</html>
